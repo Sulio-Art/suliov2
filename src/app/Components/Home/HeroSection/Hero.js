@@ -15,7 +15,7 @@ import { Card, CardContent } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { useState } from "react";
 // import { signIn } from "next-auth/react";
-import ConnectInstagramButton from "../../ConnectInstagramButton";
+import ConnectInstagramButton from "../../auth/ConnectInstagramButton";
 
 // Step 2: Define a validation schema for the hero form
 // const heroFormSchema = z.object({

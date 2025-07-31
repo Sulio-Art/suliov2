@@ -1,9 +1,7 @@
-import React from 'react'
+import { ArtworkClientWrapper } from "./client-wrapper";
 
-const page = () => {
-  return (
-    <div>Artwork</div>
-  )
-}
+const ArtworkManagementPage = ({ params }) => {
+  return <ArtworkClientWrapper userId={params.userid} />;
+};
 
-export default page
+export default ArtworkManagementPage;
