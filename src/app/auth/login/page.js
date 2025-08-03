@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Toaster, toast } from "react-hot-toast";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,9 +21,7 @@ const loginSchema = z.object({
 
 function LoginComponent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     handleSubmit,
@@ -34,46 +32,20 @@ function LoginComponent() {
     defaultValues: { email: "", password: "" },
   });
 
-  
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
-      const userId = session.user.id;
-      const targetUrl = `/user/${userId}/artwork-management`;
-      router.replace(targetUrl);
-    }
-  }, [status, session, router]);
-
- 
   const onSubmit = async (data) => {
-    setIsLoading(true);
-   
+    setIsSubmitting(true);
     const result = await signIn("credentials", {
-      redirect: false, 
       email: data.email,
       password: data.password,
+      redirect: true,
+      callbackUrl: "/dashboard",
     });
-    setIsLoading(false);
+
+    setIsSubmitting(false);
     if (result?.error) {
-     
-      toast.error(result.error);
+      toast.error("Login failed. Please check your credentials.");
     }
   };
-
-  useEffect(() => {
-    if (searchParams.get("verified") === "true") {
-      toast.success("Account verified! Please log in.");
-      router.replace("/auth/login", undefined, { shallow: true });
-    }
-  }, [searchParams, router]);
-
-  
-  if (status === "loading" || status === "authenticated") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -94,7 +66,6 @@ function LoginComponent() {
                     id="email"
                     type="email"
                     placeholder="you@example.com"
-                    autoComplete="email"
                     {...field}
                   />
                 )}
@@ -115,7 +86,6 @@ function LoginComponent() {
                     id="password"
                     type="password"
                     placeholder="••••••••"
-                    autoComplete="current-password"
                     {...field}
                   />
                 )}
@@ -126,8 +96,8 @@ function LoginComponent() {
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing
                   in...
@@ -138,13 +108,7 @@ function LoginComponent() {
             </Button>
           </form>
           <div className="mt-6 text-center space-y-2">
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              Forgot your password?
-            </Link>
-            <div className="text-sm">
+            <p className="text-sm">
               Don't have an account?{" "}
               <Link
                 href="/auth/register"
@@ -152,7 +116,7 @@ function LoginComponent() {
               >
                 Sign up
               </Link>
-            </div>
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -167,7 +131,7 @@ export default function LoginPage() {
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
           </div>
         }
       >

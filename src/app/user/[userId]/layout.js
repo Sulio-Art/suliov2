@@ -1,12 +1,13 @@
-import Sidebar from "@/app/Components/User/Sidebar";
+import Sidebar from "../../Components/User/Sidebar"; 
 
-export default function Layout({ children }) {
+export default function UserLayout({ children }) {
   return (
-    <>
-      <div className="h-screen  flex flex-row">
-        <Sidebar />
-        <div className="w-full bg-gray-600">{children}</div>
-      </div>
-    </>
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto">
+        
+        {children}
+      </main>
+    </div>
   );
 }
