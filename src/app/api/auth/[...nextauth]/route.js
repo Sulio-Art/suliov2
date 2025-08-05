@@ -17,7 +17,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
 
-       
+      
         if (credentials?.isInstagramAuth && credentials?.code) {
           try {
             const res = await fetch(`${BACKEND_API_URL}/api/auth/instagram/login`, {
@@ -26,10 +26,8 @@ export const authOptions = {
               body: JSON.stringify({ code: credentials.code }),
             });
             const data = await res.json();
-            
-          
             if (!res.ok || data.completionToken) {
-              throw new Error(JSON.stringify(data));
+              throw new Error(JSON.stringify({ status: res.status, ...data }));
             }
             return data;
           } catch (e) {
@@ -37,19 +35,20 @@ export const authOptions = {
           }
         }
 
-        if (credentials?.token && credentials?.email) {
         
-          const user = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
-              headers: { Authorization: `Bearer ${credentials.token}` }
-          }).then(res => res.json());
-
-          return {
-              user: user.user, 
-              token: credentials.token
-          };
+        if (credentials?.token && credentials?.email) {
+            const meResponse = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
+                headers: { Authorization: `Bearer ${credentials.token}` }
+            });
+            if (!meResponse.ok) return null;
+            const userProfile = await meResponse.json();
+            return {
+                user: userProfile.user,
+                token: credentials.token
+            };
         }
 
-        
+       
         try {
           const res = await fetch(`${BACKEND_API_URL}/api/auth/login`, {
             method: "POST",
@@ -68,14 +67,22 @@ export const authOptions = {
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
+   
     async jwt({ token, user }){
         if (user) {
-        
+           
             const userPayload = user.user;
-            token.id = userPayload._id || userPayload.id;
-            token.name = userPayload.name || `${userPayload.firstName} ${userPayload.lastName}`;
-            token.email = userPayload.email;
-            token.backendToken = user.token;
+            const backendToken = user.token;
+
+           
+            if (userPayload) {
+                token.id = userPayload._id || userPayload.id;
+                token.name = userPayload.name || `${userPayload.firstName} ${userPayload.lastName}`;
+                token.email = userPayload.email;
+            }
+            if (backendToken) {
+                token.backendToken = backendToken;
+            }
         }
         return token;
     },

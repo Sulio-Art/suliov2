@@ -16,21 +16,16 @@ import { Loader2 } from "lucide-react";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const registerSchema = z.object({
+const baseSchema = {
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("A valid email is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phoneNumber: z.string().min(1, "Phone number is required"),
-});
+};
 
-const instagramCompletionSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  phoneNumber: z.string().min(1, "Phone number is required"),
-});
-
+const registerSchema = z.object(baseSchema);
+const instagramCompletionSchema = z.object(baseSchema);
 const otpSchema = z.object({
   otp: z.string().length(6, "OTP must be 6 digits"),
 });
@@ -79,9 +74,11 @@ export default function RegisterPage() {
     if (token && prefillDataStr) {
       setIsInstagramFlow(true);
       setCompletionToken(token);
+
       const prefillData = JSON.parse(prefillDataStr);
       setValue("firstName", prefillData.firstName || "");
       setValue("lastName", prefillData.lastName || "");
+
       sessionStorage.removeItem("igCompletionToken");
       sessionStorage.removeItem("igPrefillData");
     }
@@ -105,16 +102,16 @@ export default function RegisterPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            ...data,
             completionToken: completionToken,
-            phoneNumber: data.phoneNumber,
-            password: data.password,
           }),
         }
       );
 
       const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.message || "Registration failed.");
+      if (!response.ok) {
+        throw new Error(result.message || "Registration completion failed.");
+      }
 
       toast.success("Profile complete! Logging you in...");
 
@@ -141,13 +138,13 @@ export default function RegisterPage() {
         body: JSON.stringify(data),
       });
       const result = await response.json();
-      if (!response.ok)
+      if (!response.ok) {
         throw new Error(result.message || "Registration failed.");
-
+      }
       setRegisteredEmail(data.email);
       setShowOtpForm(true);
       toast.success(
-        "Registration successful! Please check your email for an OTP."
+        "Registration successful! An OTP has been sent to your email."
       );
     } catch (err) {
       toast.error(err.message);
@@ -206,19 +203,24 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {!isInstagramFlow && (
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Controller
-            name="email"
-            control={control}
-            render={({ field }) => <Input id="email" type="email" {...field} />}
-          />
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Controller
+          name="email"
+          control={control}
+          render={({ field }) => (
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              {...field}
+            />
           )}
-        </div>
-      )}
+        />
+        {errors.email && (
+          <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+        )}
+      </div>
 
       <div>
         <Label htmlFor="phoneNumber">Phone Number</Label>
@@ -300,7 +302,7 @@ export default function RegisterPage() {
               {showOtpForm
                 ? `We've sent a code to ${registeredEmail}`
                 : isInstagramFlow
-                  ? "Welcome from Instagram! Just a few more details."
+                  ? "Welcome! Please confirm your details and choose an email."
                   : "Get started with your new account"}
             </p>
           </div>
