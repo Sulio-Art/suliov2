@@ -6,8 +6,8 @@ import { useCreateArtworkMutation } from "@/redux/Artwork/artworkApi";
 import { useRouter } from "next/navigation";
 import { Upload, Eye, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../../Components/ui/button";
+import { Input } from "../../Components/ui/input";
 
 
 const FormInput = ({ label, children }) => (

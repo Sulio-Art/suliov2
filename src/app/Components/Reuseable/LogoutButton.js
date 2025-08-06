@@ -3,23 +3,21 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import toast from "react-hot-toast";
+import { Button } from "../../Components/ui/button";
 
 export default function LogoutButton() {
   const { status } = useSession();
   const router = useRouter();
-  
+
   const handleLogout = async () => {
-   
     const data = await signOut({ redirect: false, callbackUrl: "/auth/login" });
-    toast.success("Logged out successfully!");
-   
+    console.log("Logged out successfully!");
+
     router.push(data.url);
   };
 
   if (status !== "authenticated") {
-    return null; 
+    return null;
   }
 
   return (

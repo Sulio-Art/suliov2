@@ -16,15 +16,16 @@ export const authOptions = {
         isInstagramAuth: { label: "Is Instagram Auth", type: "boolean" },
       },
       async authorize(credentials) {
-
-      
         if (credentials?.isInstagramAuth && credentials?.code) {
           try {
-            const res = await fetch(`${BACKEND_API_URL}/api/auth/instagram/login`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ code: credentials.code }),
-            });
+            const res = await fetch(
+              `${BACKEND_API_URL}/api/auth/instagram/login`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: credentials.code }),
+              }
+            );
             const data = await res.json();
             if (!res.ok || data.completionToken) {
               throw new Error(JSON.stringify({ status: res.status, ...data }));
@@ -35,25 +36,26 @@ export const authOptions = {
           }
         }
 
-        
         if (credentials?.token && credentials?.email) {
-            const meResponse = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
-                headers: { Authorization: `Bearer ${credentials.token}` }
-            });
-            if (!meResponse.ok) return null;
-            const userProfile = await meResponse.json();
-            return {
-                user: userProfile.user,
-                token: credentials.token
-            };
+          const meResponse = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${credentials.token}` },
+          });
+          if (!meResponse.ok) return null;
+          const userProfile = await meResponse.json();
+          return {
+            user: userProfile.user,
+            token: credentials.token,
+          };
         }
 
-       
         try {
           const res = await fetch(`${BACKEND_API_URL}/api/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.message);
@@ -67,34 +69,62 @@ export const authOptions = {
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-   
-    async jwt({ token, user }){
-        if (user) {
-           
-            const userPayload = user.user;
-            const backendToken = user.token;
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        const userPayload = user.user;
+        const backendToken = user.token;
 
-           
-            if (userPayload) {
-                token.id = userPayload._id || userPayload.id;
-                token.name = userPayload.name || `${userPayload.firstName} ${userPayload.lastName}`;
-                token.email = userPayload.email;
-            }
-            if (backendToken) {
-                token.backendToken = backendToken;
-            }
+        if (userPayload) {
+          token.id = userPayload._id || userPayload.id;
+          token.name =
+            userPayload.name ||
+            `${userPayload.firstName} ${userPayload.lastName}`;
+          token.email = userPayload.email;
+          token.isInstagramConnected = !!userPayload.instagramUserId;
+        }
+        if (backendToken) {
+          token.backendToken = backendToken;
         }
         return token;
+      }
+
+      if (trigger === "update" && session?.isInstagramConnected) {
+        token.isInstagramConnected = session.isInstagramConnected;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token.backendToken}` },
+        });
+
+        if (!response.ok) {
+          return null;
+        }
+
+        const refreshedUser = await response.json();
+        if (!refreshedUser) {
+          return null;
+        }
+
+        return {
+          ...token,
+          name: `${refreshedUser.user.firstName} ${refreshedUser.user.lastName}`,
+          isInstagramConnected: !!refreshedUser.user.instagramUserId,
+        };
+      } catch (error) {
+        return null;
+      }
     },
     async session({ session, token }) {
-        if(token && session.user){
-            session.user.id = token.id;
-            session.user.name = token.name;
-            session.user.email = token.email;
-            session.backendToken = token.backendToken;
-        }
-        return session;
-    }
+      if (token && session.user) {
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.backendToken = token.backendToken;
+        session.isInstagramConnected = token.isInstagramConnected;
+      }
+      return session;
+    },
   },
   pages: {
     signIn: "/auth/login",

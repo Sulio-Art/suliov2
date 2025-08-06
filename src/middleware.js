@@ -16,7 +16,11 @@ export default withAuth(
       }
     }
 
-    if (isLoggedIn && pathname.startsWith("/auth")) {
+    if (
+      isLoggedIn &&
+      pathname.startsWith("/auth") &&
+      pathname !== "/auth/instagram/callback"
+    ) {
       const userId = token.id;
       if (userId) {
         return NextResponse.redirect(
