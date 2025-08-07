@@ -1,77 +1,142 @@
 "use client";
-
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Palette, Settings, User } from "lucide-react";
+import {
+  LayoutGrid,
+  Palette,
+  BookOpen,
+  Bot,
+  CreditCard,
+  Layers,
+  Users,
+  Calendar,
+  User,
+} from "lucide-react";
 import LogoutButton from "../Reuseable/LogoutButton";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { data: session, status } = useSession(); 
-  const userId = session?.user?.id; 
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id;
 
-  
-  const sidebarItems = [
+  const mainItems = [
     {
       title: "Dashboard",
-      icon: LayoutDashboard,
-      
+      icon: LayoutGrid,
       href: userId ? `/user/${userId}/dashboard` : "#",
     },
     {
       title: "Artwork Management",
       icon: Palette,
-      
       href: userId ? `/user/${userId}/artwork-management` : "#",
     },
-    { title: "Settings", icon: Settings, href: "/settings" }, 
-    { title: "Profile", icon: User, href: "/profile" }, 
+    {
+      title: "Daily Diary",
+      icon: BookOpen,
+      href: userId ? `/user/${userId}/daily-diary` : "#",
+    },
+    {
+      title: "AI Chatbot",
+      icon: Bot,
+      href: userId ? `/user/${userId}/ai-chatbot` : "#",
+    },
+    {
+      title: "Subscription",
+      icon: CreditCard,
+      href: userId ? `/user/${userId}/subscription` : "#",
+    },
+    {
+      title: "Transaction Management",
+      icon: Layers,
+      href: userId ? `/user/${userId}/transaction-management` : "#",
+    },
+    {
+      title: "Customer Management",
+      icon: Users,
+      href: userId ? `/user/${userId}/customer-management` : "#",
+    },
+    {
+      title: "Event Management",
+      icon: Calendar,
+      href: userId ? `/user/${userId}/event-management` : "#",
+    },
   ];
 
- 
   if (status === "loading") {
-    return (
-      <div className="hidden lg:flex h-screen w-64 flex-col border-r bg-slate-900 text-white">
-        
-      </div>
-    );
+    return <div className="hidden lg:block w-64 bg-white border-r" />;
   }
 
   return (
     <>
       <Toaster position="top-center" />
-      <div className="hidden lg:flex h-screen w-64 flex-col border-r bg-slate-900 text-white">
-        <div className="flex items-center justify-center p-6 border-b border-slate-700">
+      <div className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col">
+        <div className="p-4 flex justify-center py-8">
           <Link href={userId ? `/user/${userId}/dashboard` : "#"}>
-            <span className="text-2xl font-bold">Sulio AI</span>
+            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">
+              <span className="text-white font-bold text-xl">AI</span>
+            </div>
           </Link>
         </div>
-        <nav className="flex-1 space-y-2 p-4">
-          {sidebarItems.map((item) => {
-            const isActive = pathname === item.href;
+
+        <nav className="px-4 space-y-2">
+          {mainItems.map((item) => {
+            const isActive =
+              item.href !== "#" && pathname.startsWith(item.href);
             return (
               <Link
                 key={item.title}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white",
-                  isActive && "bg-slate-700 text-white font-medium"
+                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all",
+                  isActive
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                 )}
               >
-                <item.icon className="h-5 w-5" />
-                <span className="text-sm">{item.title}</span>
+                <item.icon
+                  className={cn(
+                    "h-5 w-5",
+                    isActive ? "text-blue-700" : "text-gray-400"
+                  )}
+                />
+                <span>{item.title}</span>
               </Link>
             );
           })}
+          <Link
+            href="/profile"
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all",
+              pathname === "/profile"
+                ? "bg-blue-50 text-blue-700"
+                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+            )}
+          >
+            {session?.user?.image ? (
+              <Image
+                src={session.user.image}
+                alt="Profile"
+                width={20}
+                height={20}
+                className="rounded-full"
+              />
+            ) : (
+              <User
+                className={cn(
+                  "h-5 w-5",
+                  pathname === "/profile" ? "text-blue-700" : "text-gray-400"
+                )}
+              />
+            )}
+            <span>Profile</span>
+          </Link>
         </nav>
-        <div className="mt-auto p-4 border-t border-slate-700">
-          <div className="text-center text-xs text-slate-500 mb-4">
-            © 2023 Sulio AI
-          </div>
-        
+
+        <div className="mt-auto p-4 border-t border-gray-100">
           <LogoutButton />
         </div>
       </div>
