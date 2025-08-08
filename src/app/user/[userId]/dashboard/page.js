@@ -1,4 +1,4 @@
-import ClientSideWrapper from "../clientSideWrapper";
+import ClientSideWrapper from "../../clientSideWrapper";
 
 export default function DashboardPage() {
   return (

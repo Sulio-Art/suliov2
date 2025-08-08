@@ -1,54 +1,28 @@
-import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const isLoggedIn = !!token;
-    const { pathname } = req.nextUrl;
+export async function middleware(req) {
+  const secret = process.env.NEXTAUTH_SECRET;
 
-    if (isLoggedIn && pathname === "/dashboard") {
-      const userId = token.id;
-      if (userId) {
-        return NextResponse.redirect(
-          new URL(`/user/${userId}/dashboard`, req.url)
-        );
-      }
-    }
+  const token = await getToken({ req, secret });
 
-    if (
-      isLoggedIn &&
-      pathname.startsWith("/auth") &&
-      pathname !== "/auth/instagram/callback"
-    ) {
-      const userId = token.id;
-      if (userId) {
-        return NextResponse.redirect(
-          new URL(`/user/${userId}/dashboard`, req.url)
-        );
-      }
-    }
+  const { pathname } = req.nextUrl;
 
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ req, token }) => {
-        const { pathname } = req.nextUrl;
-
-        if (pathname.startsWith("/auth")) {
-          return true;
-        }
-
-        return !!token;
-      },
-    },
-    pages: {
-      signIn: "/auth/login",
-    },
+  if (token && pathname === "/") {
+    const url = new URL(`/user/${token.id}/dashboard`, req.url);
+    return NextResponse.redirect(url);
   }
-);
+
+  if (!token && pathname.startsWith("/user")) {
+    const url = new URL("/auth/login", req.url);
+
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/user/:path*", "/dashboard", "/auth/:path*"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

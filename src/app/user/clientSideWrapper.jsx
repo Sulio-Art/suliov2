@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import InstagramConnectModal from "../../Components/auth/instagram/InstagramConnectModal";
+import InstagramConnectModal from "../Components/auth/instagram/InstagramConnectModal";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 

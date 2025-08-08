@@ -39,11 +39,11 @@ function LoginComponent() {
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
+
     const result = await signIn("credentials", {
       email: data.email,
       password: data.password,
       redirect: true,
-      callbackUrl: "/dashboard",
     });
 
     setIsSubmitting(false);

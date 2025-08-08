@@ -1,11 +1,10 @@
-import ClientSideWrapper from "../clientSideWrapper";
+import ClientSideWrapper from "../../clientSideWrapper.jsx";
 import DailyDiaryCalendar from "../../../Components/DailyDiary/DailyDiaryCalendar";
 
 export default function DailyDiaryPage() {
   return (
-    // The wrapper handles session loading, modals, and toasts.
     <ClientSideWrapper>
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div className="h-full">
         <DailyDiaryCalendar />
       </div>
     </ClientSideWrapper>
