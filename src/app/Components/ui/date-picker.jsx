@@ -1,9 +1,7 @@
 "use client";
-
 import * as React from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/app/Components/ui/button";
 import { Calendar } from "@/app/Components/ui/calendar";
@@ -15,7 +13,6 @@ import {
 
 export function DatePicker({ date, setDate, fromDate }) {
   const [isOpen, setIsOpen] = React.useState(false);
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>

@@ -2,7 +2,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-// Removed unused Button import
+
 
 export default function LogoutButton() {
   const { status } = useSession();

@@ -81,6 +81,7 @@ export const authOptions = {
             `${userPayload.firstName} ${userPayload.lastName}`;
           token.email = userPayload.email;
           token.isInstagramConnected = !!userPayload.instagramUserId;
+          token.currentPlan = userPayload.currentPlan; // Add currentPlan on login
         }
         if (backendToken) {
           token.backendToken = backendToken;
@@ -110,6 +111,7 @@ export const authOptions = {
           ...token,
           name: `${refreshedUser.user.firstName} ${refreshedUser.user.lastName}`,
           isInstagramConnected: !!refreshedUser.user.instagramUserId,
+          currentPlan: refreshedUser.user.currentPlan, // Update currentPlan on refresh
         };
       } catch (error) {
         return null;
@@ -122,6 +124,7 @@ export const authOptions = {
         session.user.email = token.email;
         session.backendToken = token.backendToken;
         session.isInstagramConnected = token.isInstagramConnected;
+        session.user.currentPlan = token.currentPlan; // Add currentPlan to the final session object
       }
       return session;
     },

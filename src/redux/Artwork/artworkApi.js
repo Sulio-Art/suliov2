@@ -3,22 +3,19 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const artworkApi = createApi({
   reducerPath: "artworkApi",
   baseQuery: fetchBaseQuery({
-    baseUrl:
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "https://q2l5kktv-5000.inc1.devtunnels.ms/api",
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
     prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth?.token;
+      const token = getState().auth.token;
       if (token) {
         headers.set("authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
-
-  tagTypes: ["Artwork"],
+  tagTypes: ["Artwork", "StorageStats"],
   endpoints: (builder) => ({
     getAllArtworks: builder.query({
-      query: (userId) => `/artworks/user/${userId}`,
+      query: ({ userId, page = 1 }) => `/artworks/user/${userId}?page=${page}`,
       providesTags: ["Artwork"],
     }),
     createArtwork: builder.mutation({
@@ -26,15 +23,21 @@ export const artworkApi = createApi({
         url: "/artworks",
         method: "POST",
         body: formData,
+        formData: true,
       }),
-      invalidatesTags: ["Artwork"],
+      invalidatesTags: ["Artwork", "StorageStats"],
+    }),
+
+    getStorageStats: builder.query({
+      query: () => "/artworks/stats/storage",
+      providesTags: ["StorageStats"],
     }),
     deleteArtwork: builder.mutation({
       query: (id) => ({
         url: `/artworks/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Artwork"],
+      invalidatesTags: ["Artwork", "StorageStats"],
     }),
   }),
 });
@@ -43,4 +46,5 @@ export const {
   useGetAllArtworksQuery,
   useCreateArtworkMutation,
   useDeleteArtworkMutation,
+  useGetStorageStatsQuery,
 } = artworkApi;

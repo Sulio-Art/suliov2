@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-
+import { useSubscription } from "@/hooks/useSubscription";
 import { cn } from "@/lib/utils";
 import {
   LayoutGrid,
@@ -12,7 +12,6 @@ import {
   Bot,
   CreditCard,
   Layers,
-  Users,
   Calendar,
   User,
 } from "lucide-react";
@@ -21,9 +20,10 @@ import LogoutButton from "../Reuseable/LogoutButton";
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const { hasAccess } = useSubscription();
   const userId = session?.user?.id;
 
-  const mainItems = [
+  const allItems = [
     {
       title: "Dashboard",
       icon: LayoutGrid,
@@ -49,15 +49,12 @@ export default function Sidebar() {
       icon: CreditCard,
       href: userId ? `/user/${userId}/subscription` : "#",
     },
+
     {
       title: "Transaction Management",
       icon: Layers,
       href: userId ? `/user/${userId}/transaction-management` : "#",
-    },
-    {
-      title: "Customer Management",
-      icon: Users,
-      href: userId ? `/user/${userId}/customer-management` : "#",
+      feature: "Transaction and sales tracking",
     },
     {
       title: "Event Management",
@@ -65,6 +62,10 @@ export default function Sidebar() {
       href: userId ? `/user/${userId}/event-management` : "#",
     },
   ];
+
+  const mainItems = allItems.filter(
+    (item) => !item.feature || hasAccess(item.feature)
+  );
 
   if (status === "loading") {
     return <div className="hidden lg:block w-64 bg-white border-r" />;

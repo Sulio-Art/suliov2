@@ -12,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "../../../Components/ui/button";
+import PaginationControls from "../../../Components/Reuseable/PaginationControls";
 
 const Checkbox = ({ ...props }) => (
   <input
@@ -22,17 +23,20 @@ const Checkbox = ({ ...props }) => (
 );
 
 const ArtworkRow = ({ artwork }) => {
+  
+  const status = artwork.status || "Published";
+
   return (
     <div className="grid grid-cols-[auto_3fr_1fr_1fr_1fr_auto] items-center gap-4 py-3 px-4 border-t border-gray-200 hover:bg-gray-50">
       <Checkbox />
       <p className="font-medium text-gray-800 truncate">{artwork.title}</p>
-      <p className="text-gray-600">${artwork.price.toLocaleString()}</p>
-      <p className="text-gray-600">{artwork.year}</p>
+      <p className="text-gray-600">${(artwork.price || 0).toLocaleString()}</p>
+      <p className="text-gray-600">{artwork.creationYear || "N/A"}</p>
       <div>
         <span
           className={`px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-700`}
         >
-          {artwork.status}
+          {status}
         </span>
       </div>
       <div className="flex items-center gap-4 text-gray-500">
@@ -51,18 +55,19 @@ const ArtworkRow = ({ artwork }) => {
 };
 
 export function ArtworkClientWrapper({ userId }) {
-  const {
-    data: artworks,
-    error,
-    isLoading,
-  } = useGetAllArtworksQuery(userId, {
-    skip: !userId,
-  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const { data, error, isLoading } = useGetAllArtworksQuery(
+    { userId, page: currentPage },
+    { skip: !userId }
+  );
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const artworks = data?.artworks || [];
+  const totalPages = data?.totalPages || 1;
+
   const filteredArtworks =
-    artworks?.filter((art) =>
+    artworks.filter((art) =>
       art.title.toLowerCase().includes(searchTerm.toLowerCase())
     ) || [];
 
@@ -120,20 +125,23 @@ export function ArtworkClientWrapper({ userId }) {
             )}
             {!isLoading &&
               !error &&
-              artworks &&
               filteredArtworks.length > 0 &&
               filteredArtworks.map((artwork) => (
-                <ArtworkRow key={artwork.id} artwork={artwork} />
+                <ArtworkRow key={artwork._id} artwork={artwork} />
               ))}
-            {!isLoading &&
-              !error &&
-              (!artworks || filteredArtworks.length === 0) && (
-                <div className="text-center p-10 text-gray-500">
-                  No artworks found.
-                </div>
-              )}
+            {!isLoading && !error && filteredArtworks.length === 0 && (
+              <div className="text-center p-10 text-gray-500">
+                No artworks found.
+              </div>
+            )}
           </div>
         </div>
+
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </main>
     </div>
   );
