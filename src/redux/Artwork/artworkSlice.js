@@ -1,18 +1,27 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isFilterModalOpen: false,
+  userInfo: null,
+  token: null,
 };
 
-const artworkSlice = createSlice({
-  name: "artwork",
+const authSlice = createSlice({
+  name: "auth",
   initialState,
   reducers: {
-    toggleFilterModal: (state) => {
-      state.isFilterModalOpen = !state.isFilterModalOpen;
+    setCredentials(state, action) {
+      const { user, token } = action.payload;
+      state.userInfo = user;
+      state.token = token;
+    },
+
+    logout(state) {
+      state.userInfo = null;
+      state.token = null;
     },
   },
 });
 
-export const { toggleFilterModal } = artworkSlice.actions;
-export default artworkSlice.reducer;
+export const { setCredentials, logout } = authSlice.actions;
+
+export default authSlice.reducer;

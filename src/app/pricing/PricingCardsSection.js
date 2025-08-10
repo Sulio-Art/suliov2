@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { planDetails } from "../subscription/planDetails";
+import { planDetails } from "../Components/subscription/planDetails";
 import PricingCard from "./PricingCard";
 import { cn } from "@/lib/utils";
 

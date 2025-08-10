@@ -1,5 +1,5 @@
 import { useSession } from "next-auth/react";
-import { planDetails } from "@/Components/subscription/planDetails";
+import { planDetails } from "../app/Components/subscription/planDetails";
 
 const featureAccessMap = {
   "Transaction and sales tracking": { plans: ["plus", "premium", "pro"] },

@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const artworkApi = createApi({
   reducerPath: "artworkApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
       if (token) {
@@ -23,11 +23,9 @@ export const artworkApi = createApi({
         url: "/artworks",
         method: "POST",
         body: formData,
-        formData: true,
       }),
       invalidatesTags: ["Artwork", "StorageStats"],
     }),
-
     getStorageStats: builder.query({
       query: () => "/artworks/stats/storage",
       providesTags: ["StorageStats"],

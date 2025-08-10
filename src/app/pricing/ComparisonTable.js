@@ -1,5 +1,5 @@
-import { Button } from "../ui/button";
-import { featureList, planDetails } from "../subscription/planDetails";
+import { Button } from "../Components/ui/button";
+import { featureList, planDetails } from "../Components/subscription/planDetails";
 import { Check, X } from "lucide-react"; 
 
 

@@ -16,53 +16,39 @@ export const authOptions = {
         isInstagramAuth: { label: "Is Instagram Auth", type: "boolean" },
       },
       async authorize(credentials) {
+      
         if (credentials?.isInstagramAuth && credentials?.code) {
           try {
-            const res = await fetch(
-              `${BACKEND_API_URL}/api/auth/instagram/login`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code: credentials.code }),
-              }
-            );
+            const res = await fetch(`${BACKEND_API_URL}/api/auth/instagram/login`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ code: credentials.code }),
+            });
             const data = await res.json();
             if (!res.ok || data.completionToken) {
               throw new Error(JSON.stringify({ status: res.status, ...data }));
             }
             return data;
-          } catch (e) {
-            throw new Error(e.message);
-          }
+          } catch (e) { throw new Error(e.message); }
         }
-
         if (credentials?.token && credentials?.email) {
           const meResponse = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
             headers: { Authorization: `Bearer ${credentials.token}` },
           });
           if (!meResponse.ok) return null;
           const userProfile = await meResponse.json();
-          return {
-            user: userProfile.user,
-            token: credentials.token,
-          };
+          return { user: userProfile.user, token: credentials.token };
         }
-
         try {
           const res = await fetch(`${BACKEND_API_URL}/api/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
+            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.message);
           return data;
-        } catch (e) {
-          throw new Error(e.message);
-        }
+        } catch (e) { throw new Error(e.message); }
       },
     }),
   ],
@@ -76,12 +62,10 @@ export const authOptions = {
 
         if (userPayload) {
           token.id = userPayload._id || userPayload.id;
-          token.name =
-            userPayload.name ||
-            `${userPayload.firstName} ${userPayload.lastName}`;
+          token.name = userPayload.name || `${userPayload.firstName} ${userPayload.lastName}`;
           token.email = userPayload.email;
           token.isInstagramConnected = !!userPayload.instagramUserId;
-          token.currentPlan = userPayload.currentPlan; // Add currentPlan on login
+          token.currentPlan = userPayload.currentPlan;
         }
         if (backendToken) {
           token.backendToken = backendToken;
@@ -98,33 +82,42 @@ export const authOptions = {
           headers: { Authorization: `Bearer ${token.backendToken}` },
         });
 
+       
         if (!response.ok) {
-          return null;
+          console.error("[NextAuth] Session refresh failed. Invalidating session.");
+          return {};
         }
 
         const refreshedUser = await response.json();
         if (!refreshedUser) {
-          return null;
+          return {}; 
         }
 
         return {
           ...token,
           name: `${refreshedUser.user.firstName} ${refreshedUser.user.lastName}`,
           isInstagramConnected: !!refreshedUser.user.instagramUserId,
-          currentPlan: refreshedUser.user.currentPlan, // Update currentPlan on refresh
+          currentPlan: refreshedUser.user.currentPlan,
         };
       } catch (error) {
-        return null;
+        console.error("[NextAuth] CRITICAL: Error refreshing session token:", error);
+        return {}; 
       }
     },
     async session({ session, token }) {
-      if (token && session.user) {
+      
+      if (!token || !token.id) {
+       
+        return null;
+      }
+      
+      if (session.user) {
         session.user.id = token.id;
         session.user.name = token.name;
         session.user.email = token.email;
         session.backendToken = token.backendToken;
         session.isInstagramConnected = token.isInstagramConnected;
-        session.user.currentPlan = token.currentPlan; // Add currentPlan to the final session object
+        session.user.currentPlan = token.currentPlan;
       }
       return session;
     },

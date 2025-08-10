@@ -49,7 +49,6 @@ export default function Sidebar() {
       icon: CreditCard,
       href: userId ? `/user/${userId}/subscription` : "#",
     },
-
     {
       title: "Transaction Management",
       icon: Layers,
@@ -105,11 +104,12 @@ export default function Sidebar() {
             </Link>
           );
         })}
+       
         <Link
-          href="/profile"
+          href={userId ? `/user/${userId}/profile` : "#"} 
           className={cn(
             "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all",
-            pathname === "/profile"
+            pathname.includes("/profile")
               ? "bg-blue-50 text-blue-700"
               : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
           )}
@@ -126,7 +126,9 @@ export default function Sidebar() {
             <User
               className={cn(
                 "h-5 w-5",
-                pathname === "/profile" ? "text-blue-700" : "text-gray-400"
+                pathname.includes("/profile")
+                  ? "text-blue-700"
+                  : "text-gray-400"
               )}
             />
           )}

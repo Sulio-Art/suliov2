@@ -1,4 +1,4 @@
-import { Button } from "../ui/button";
+import { Button } from "../Components/ui/button";
 
 export default function CallToAction() {
   return (

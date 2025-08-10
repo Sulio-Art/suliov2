@@ -1,16 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
 import { artworkApi } from "./Artwork/artworkApi";
 import artworkReducer from "./Artwork/artworkSlice";
-import userReducer from "./User/User.Reducers";
+import authReducer from "./Artwork/artworkSlice";
 
 export const store = configureStore({
   reducer: {
-    artwork: artworkReducer,
-    user: userReducer,
-
     [artworkApi.reducerPath]: artworkApi.reducer,
+    artwork: artworkReducer,
+    auth: authReducer,
   },
-
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(artworkApi.middleware),
 });
+
+setupListeners(store.dispatch);

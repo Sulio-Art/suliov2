@@ -1,9 +1,5 @@
-import React from 'react'
+import AdminDashboardClient from "./client-wrapper";
 
-const page = () => {
-  return (
-    <div>admin</div>
-  )
+export default function AdminDashboardPage() {
+  return <AdminDashboardClient />;
 }
-
-export default page

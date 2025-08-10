@@ -1,5 +1,5 @@
 import { Check, Loader2, ArrowRight } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../Components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function PricingCard({

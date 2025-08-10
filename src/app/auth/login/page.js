@@ -16,7 +16,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../Components/ui/card";
+} from "../../Components/ui/card";     // TODO need eye function in password input
 import { Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
@@ -43,12 +43,16 @@ function LoginComponent() {
     const result = await signIn("credentials", {
       email: data.email,
       password: data.password,
-      redirect: true,
+      redirect: false,
     });
 
     setIsSubmitting(false);
     if (result?.error) {
       toast.error("Login failed. Please check your credentials.");
+    } else if  (result?.ok) {
+     
+      router.push("/");
+      router.refresh(); 
     }
   };
 

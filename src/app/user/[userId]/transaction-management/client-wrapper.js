@@ -7,6 +7,7 @@ import { Button } from "../../../Components/ui/button";
 import { SlidersHorizontal, Loader2 } from "lucide-react";
 import TransactionsTable from "../../../Components/transaction-management/TransactionsTable";
 import PaginationControls from "../../../Components/Reuseable/PaginationControls";
+import UpgradePlanPrompt from "../../../Components/Reuseable/UpgradePlanprompt.js";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -15,27 +16,33 @@ export default function ClientWrapper() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isForbidden, setIsForbidden] = useState(false); 
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (session?.backendToken) {
       setLoading(true);
+      setIsForbidden(false);
       const fetchTransactions = async () => {
         try {
           const response = await fetch(
             `${BACKEND_API_URL}/api/transactions/me?page=${currentPage}`,
             {
-              headers: {
-                Authorization: `Bearer ${session.backendToken}`,
-              },
+              headers: { Authorization: `Bearer ${session.backendToken}` },
             }
           );
+
+         
+          if (response.status === 403) {
+            setIsForbidden(true);
+            return; 
+          }
           if (!response.ok) {
             throw new Error("Failed to fetch transactions.");
           }
+
           const data = await response.json();
           setTransactions(data.transactions);
           setTotalPages(data.totalPages);
@@ -57,6 +64,11 @@ export default function ClientWrapper() {
     );
   }
 
+  
+  if (isForbidden) {
+    return <UpgradePlanPrompt featureName="Transaction Management" />;
+  }
+
   if (error) {
     return (
       <div className="flex-1 p-8 bg-gray-50 text-center text-red-500">
@@ -70,7 +82,6 @@ export default function ClientWrapper() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Transaction Management</h1>
       </div>
-
       <div className="p-6 bg-white rounded-lg shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Transactions</h2>
