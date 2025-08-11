@@ -269,11 +269,39 @@ export const ArtworkUploadForm = ({ userId }) => {
               required
             >
               <option value="" disabled>
-                eg: Painting
+                eg: Sculpture
               </option>
-              <option value="painting">Painting</option>
+
               <option value="sculpture">Sculpture</option>
               <option value="digital">Digital Art</option>
+              <option value="oil-painting">Oil Painting</option>
+              <option value="acrylic-painting">Acrylic Painting</option>
+              <option value="watercolor-painting">Watercolor Painting</option>
+              <option value="ink-painting">Ink Painting</option>
+              <option value="pastel-painting">Pastel Painting</option>
+              <option value="copperplate">Copperplate</option>
+              <option value="lithograph">Lithograph</option>
+              <option value="woodcut">Woodcut</option>
+              <option value="silkscreen">Silkscreen</option>
+              <option value="digital-print">Digital Print</option>
+              <option value="drawing">Drawing</option>
+              <option value="charcoal-drawing">Charcoal Drawing</option>
+              <option value="gouache-painting">Gouache Painting</option>
+              <option value="installation-art">Installation Art</option>
+              <option value="ceramic-art">Ceramic Art</option>
+              <option value="fiber-art">Fiber Art / Textile Art</option>
+              <option value="photography-art">Photography Art</option>
+              <option value="video-art">Video Art</option>
+              <option value="nft-art">NFT Art</option>
+              <option value="interactive-art">Interactive Art</option>
+              <option value="mixed-media">Mixed Media</option>
+              <option value="public-art">Public Art</option>
+              <option value="calligraphy">Calligraphy</option>
+              <option value="illustration">Illustration</option>
+              <option value="art-jewelry">Art Jewelry</option>
+              <option value="artist-merchandise">
+                Artist-Designed Merchandise
+              </option>
             </select>
           </FormInput>
           <FormInput label="Creative Insights">

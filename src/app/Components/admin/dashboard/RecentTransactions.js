@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { FileSearch } from "lucide-react";
 
@@ -27,11 +28,14 @@ export default function RecentTransactions({ transactions = [] }) {
         <h3 className="font-semibold text-lg text-gray-800">
           Recent Transaction History
         </h3>
-        <Link href="/admin/transactions">
-          <span className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer">
-            See all
-          </span>
-        </Link>
+
+        {transactions.length > 0 && (
+          <Link href="/admin/transactions">
+            <span className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer">
+              See all
+            </span>
+          </Link>
+        )}
       </div>
       <div className="overflow-x-auto flex-grow">
         <table className="w-full text-sm">

@@ -7,7 +7,7 @@ export default function EventStats({
   upcomingEvents,
 }) {
   const formatNumber = (num) => {
-    return new Intl.NumberFormat("en-US").format(num);
+    return new Intl.NumberFormat("en-US").format(num || 0);
   };
 
   return (
@@ -18,7 +18,7 @@ export default function EventStats({
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalEvents}</div>
+          <div className="text-2xl font-bold">{formatNumber(totalEvents)}</div>
         </CardContent>
       </Card>
       <Card>
@@ -36,11 +36,13 @@ export default function EventStats({
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Upcoming Event</CardTitle>
+          <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
           <CalendarClock className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{upcomingEvents}</div>
+          <div className="text-2xl font-bold">
+            {formatNumber(upcomingEvents)}
+          </div>
         </CardContent>
       </Card>
     </div>

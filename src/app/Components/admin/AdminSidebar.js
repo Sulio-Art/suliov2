@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Receipt } from "lucide-react";
+import LogoutButton from "../Reuseable/LogoutButton";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -42,6 +43,9 @@ export default function AdminSidebar() {
           );
         })}
       </nav>
+      <div className="mt-auto p-4 border-t border-gray-200">
+        <LogoutButton />
+      </div>
     </div>
   );
 }

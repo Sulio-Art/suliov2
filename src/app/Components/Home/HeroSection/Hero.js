@@ -23,6 +23,30 @@ export default function Hero() {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
+  const [emailExists, setEmailExists] = useState(false);
+  const [emailCheckLoading, setEmailCheckLoading] = useState(false);
+
+  const checkEmailInDb = async (email) => {
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      setEmailExists(false);
+      return;
+    }
+    setEmailCheckLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_API_URL}/api/auth/check-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      setEmailExists(data.exists);
+    } catch {
+      setEmailExists(false);
+    } finally {
+      setEmailCheckLoading(false);
+    }
+  };
+
   const instagramLoginUrl = new URL(
     "https://www.instagram.com/oauth/authorize"
   );
@@ -65,7 +89,10 @@ export default function Hero() {
 
   const handleSendOtp = async () => {
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      console.error("Please enter a valid email address.");
+      return;
+    }
+    await checkEmailInDb(email);
+    if (emailExists) {
       return;
     }
     setIsSubmitting(true);
@@ -80,10 +107,8 @@ export default function Hero() {
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to send OTP.");
-      console.log("An OTP has been sent to your email!");
       setShowOtpInput(true);
     } catch (err) {
-      console.error(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +116,6 @@ export default function Hero() {
 
   const handleVerifyOtpAndRegister = async () => {
     if (otp.length !== 6) {
-      console.error("Please enter a valid 6-digit OTP.");
       return;
     }
     setIsSubmitting(true);
@@ -107,11 +131,9 @@ export default function Hero() {
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "OTP verification failed.");
-      console.log("Email verified successfully!");
       sessionStorage.setItem("verifiedEmail", email);
       router.push("/auth/register");
     } catch (err) {
-      console.error(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -135,10 +157,25 @@ export default function Hero() {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailExists(false);
+            }}
+            onBlur={() => checkEmailInDb(email)}
             readOnly={showOtpInput}
             className="pl-12 pr-4 py-6 rounded-full bg-gray-100 placeholder:text-gray-500"
           />
+          {emailExists && !showOtpInput && (
+            <div className="bg-blue-50 border border-blue-200 rounded px-2 py-1 mt-2 text-blue-700 text-sm flex items-center gap-1">
+              <span>🚩 You already have an account.</span>
+              <Link
+                href="/auth/login"
+                className="font-semibold underline hover:text-blue-800"
+              >
+                Go to login
+              </Link>
+            </div>
+          )}
         </div>
         {showOtpInput && (
           <div className="relative">
@@ -156,7 +193,7 @@ export default function Hero() {
         <Button
           type="submit"
           className="w-full bg-[#ff8c43] hover:bg-[#ff8c43]/90 text-white rounded-full py-4 h-auto text-base font-semibold"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (emailExists && !showOtpInput)}
         >
           {isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

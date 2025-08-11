@@ -69,15 +69,15 @@ export default function StandardRegistrationForm({
           <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
         )}
         {userExistsError && (
-          <p className="text-red-500 text-sm mt-1">
-            An account with this email already exists.{" "}
+          <div className="bg-blue-50 border border-blue-200 rounded px-2 py-1 mt-2 text-blue-700 text-sm flex items-center gap-1">
+            <span>🚩 You already have an account.</span>
             <Link
               href="/auth/login"
-              className="font-bold underline hover:text-red-700"
+              className="font-semibold underline hover:text-blue-800"
             >
-              Please log in.
+              Go to login
             </Link>
-          </p>
+          </div>
         )}
       </div>
       <div>

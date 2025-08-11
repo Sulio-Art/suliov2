@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Loader2, Users, Calendar, Receipt } from "lucide-react";
-import SummaryCard from "../../Components/admin/dashboard/SummaryCard";
-import RecentTransactions from "../../Components/admin/dashboard/RecentTransactions";
-import LiveEvents from "../../Components/admin/dashboard/LiveEvents";
+import SummaryCard from "../Components/admin/dashboard/SummaryCard";
+import RecentTransactions from "../Components/admin/dashboard/RecentTransactions";
+import LiveEvents from "../Components/admin/dashboard/LiveEvents";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 

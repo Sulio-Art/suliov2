@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
-import PaginationControls from "../../../Components/Reuseable/PaginationControls";
-import AdminTransactionsTable from "../../../Components/admin/transactions/AdminTransactionsTable";
+import PaginationControls from "../../Components/Reuseable/PaginationControls";
+import AdminTransactionsTable from "../../Components/admin/transactions/AdminTransactionsTable";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
