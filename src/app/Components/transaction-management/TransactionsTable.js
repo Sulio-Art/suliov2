@@ -48,7 +48,6 @@ export default function TransactionsTable({ transactions }) {
 
   const formatId = (id) => id.substring(0, 8).toUpperCase();
 
-
   if (!transactions || transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-12 border-2 border-dashed rounded-lg text-gray-500 bg-gray-50/50">
@@ -76,7 +75,8 @@ export default function TransactionsTable({ transactions }) {
           <TableRow key={t._id}>
             <TableCell>{formatId(t._id)}</TableCell>
             <TableCell>{formatDate(t.createdAt)}</TableCell>
-            <TableCell>${t.amount.toFixed(4)}</TableCell>
+
+            <TableCell>${t.amount.toFixed(2)}</TableCell>
             <TableCell>
               <StatusBadge status={t.status} />
             </TableCell>

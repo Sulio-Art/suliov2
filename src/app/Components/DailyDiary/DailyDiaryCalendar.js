@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -20,7 +20,14 @@ import {
   parseISO,
   isAfter,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Pencil } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trash2,
+  Pencil,
+  Loader2,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import {
   HoverCard,
@@ -38,20 +45,6 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import CalendarSkeleton from "./CalendarSkeleton";
-
-const DiaryTag = ({ category, subject }) => (
-  <div
-    className={cn(
-      "text-xs px-2 py-1 rounded-md overflow-hidden text-ellipsis whitespace-nowrap",
-      category === "For Sale"
-        ? "bg-red-100 text-red-700"
-        : "bg-sky-100 text-sky-700"
-    )}
-  >
-    {subject || "Diary Entry"}
-  </div>
-);
 
 const DiaryDetailCard = ({ entry, onEdit, onDelete }) => (
   <div className="group/item relative flex flex-col gap-2 p-2">
@@ -97,49 +90,30 @@ const DiaryDetailCard = ({ entry, onEdit, onDelete }) => (
   </div>
 );
 
-export default function DailyDiaryCalendar() {
-  const [diaryEntries, setDiaryEntries] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+const DiaryTag = ({ category, subject }) => (
+  <div
+    className={cn(
+      "text-xs px-2 py-1 rounded-md overflow-hidden text-ellipsis whitespace-nowrap",
+      category === "For Sale"
+        ? "bg-red-100 text-red-700"
+        : "bg-sky-100 text-sky-700"
+    )}
+  >
+    {subject || "Diary Entry"}
+  </div>
+);
+
+export default function DailyDiaryCalendar({ initialEntries = [] }) {
+  const [diaryEntries, setDiaryEntries] = useState(initialEntries);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
   const userId = session?.user?.id;
   const today = new Date();
-
-  useEffect(() => {
-    const performFetch = async () => {
-      if (!session || !session.backendToken) {
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/diary`,
-          { headers: { Authorization: `Bearer ${session.backendToken}` } }
-        );
-        if (!response.ok) throw new Error("Failed to fetch diary entries.");
-        const data = await response.json();
-        setDiaryEntries(data);
-      } catch (err) {
-        setError(err.message);
-        toast.error(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (status === "authenticated") {
-      performFetch();
-    } else if (status === "unauthenticated") {
-      setIsLoading(false);
-      setDiaryEntries([]);
-    }
-  }, [session, status]);
 
   const openDeleteDialog = (entry) => {
     setEntryToDelete(entry);
@@ -148,6 +122,11 @@ export default function DailyDiaryCalendar() {
 
   const confirmDelete = async () => {
     if (!entryToDelete) return;
+    setIsDeleting(true);
+    const originalEntries = [...diaryEntries];
+    setDiaryEntries((prev) =>
+      prev.filter((entry) => entry._id !== entryToDelete._id)
+    );
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/diary/${entryToDelete._id}`,
@@ -156,35 +135,30 @@ export default function DailyDiaryCalendar() {
           headers: { Authorization: `Bearer ${session.backendToken}` },
         }
       );
-      if (!response.ok) throw new Error("Failed to delete entry.");
-      setDiaryEntries((prev) =>
-        prev.filter((entry) => entry._id !== entryToDelete._id)
-      );
+      if (!response.ok)
+        throw new Error("Failed to delete entry. Please try again.");
       toast.success("Diary entry deleted!");
     } catch (err) {
       toast.error(err.message);
+      setDiaryEntries(originalEntries);
     } finally {
       setIsConfirmOpen(false);
       setEntryToDelete(null);
+      setIsDeleting(false);
     }
   };
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const monthStart = startOfMonth(currentMonth),
-    monthEnd = endOfMonth(currentMonth);
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
   const startDate = startOfWeek(monthStart);
   const endDate = endOfWeek(monthEnd);
   const days = eachDayOfInterval({ start: startDate, end: endDate });
   const totalEntriesThisMonth = diaryEntries.filter((entry) =>
     isSameMonth(parseISO(entry.date), currentMonth)
   ).length;
-
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-  if (isLoading || status === "loading") return <CalendarSkeleton />;
-  if (error)
-    return <div className="text-center text-red-500 p-8">Error: {error}</div>;
 
   return (
     <>
@@ -204,7 +178,6 @@ export default function DailyDiaryCalendar() {
             </Button>
           </Link>
         </div>
-
         <div className="bg-white rounded-xl shadow-md p-4">
           <div className="flex-shrink-0 flex flex-wrap justify-between items-center gap-4 mb-4">
             <div className="flex items-center gap-4">
@@ -228,7 +201,6 @@ export default function DailyDiaryCalendar() {
               This month: {totalEntriesThisMonth}
             </div>
           </div>
-
           <div className="relative">
             <div className="absolute top-0 left-0 w-full z-20 pointer-events-none grid grid-cols-7">
               {weekDays.map((day) => (
@@ -241,24 +213,18 @@ export default function DailyDiaryCalendar() {
                 </div>
               ))}
             </div>
-
             <div
               className="grid grid-cols-7 grid-rows-6 border-l border-gray-200"
-              style={{
-                paddingTop: "1.75rem",
-                minHeight: "420px",
-              }}
+              style={{ paddingTop: "1.75rem", minHeight: "420px" }}
             >
-              {days.map((day, idx) => {
+              {days.map((day) => {
                 const dayStr = format(day, "yyyy-MM-dd");
                 const entriesForDay = diaryEntries.filter((entry) =>
                   isSameDay(parseISO(entry.date), day)
                 );
                 const dayHasEntries = entriesForDay.length > 0;
                 const hasMultipleEntries = entriesForDay.length > 1;
-
                 const isPast = isAfter(today, day) && !isSameDay(today, day);
-
                 return (
                   <HoverCard key={dayStr} openDelay={100} closeDelay={150}>
                     <HoverCardTrigger asChild>
@@ -266,9 +232,7 @@ export default function DailyDiaryCalendar() {
                         className={cn(
                           "p-2 flex flex-col items-start border-r border-b border-gray-200 relative group cursor-pointer hover:bg-gray-50 transition-colors h-full"
                         )}
-                        style={{
-                          background: "white",
-                        }}
+                        style={{ background: "white" }}
                       >
                         <span
                           className={cn(
@@ -280,7 +244,6 @@ export default function DailyDiaryCalendar() {
                         >
                           {format(day, "d")}
                         </span>
-
                         {!isPast && (
                           <Link
                             href={`/user/${userId}/daily-diary/new?date=${dayStr}`}
@@ -376,8 +339,10 @@ export default function DailyDiaryCalendar() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
+              disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

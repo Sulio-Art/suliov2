@@ -1,80 +1,68 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 import { Input } from "../../../Components/ui/input";
-import { Button } from "../../../Components/ui/button";
-import { SlidersHorizontal, Loader2 } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../Components/ui/select";
 import TransactionsTable from "../../../Components/transaction-management/TransactionsTable";
 import PaginationControls from "../../../Components/Reuseable/PaginationControls";
 import UpgradePlanPrompt from "../../../Components/Reuseable/UpgradePlanprompt.js";
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
+export default function ClientWrapper({
+  isForbidden,
+  initialTransactions,
+  initialTotalPages,
+  initialPage,
+  initialSearch,
+  initialStatus,
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
 
-export default function ClientWrapper() {
-  const { data: session } = useSession();
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isForbidden, setIsForbidden] = useState(false); 
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(initialSearch || "");
+  const [statusFilter, setStatusFilter] = useState(initialStatus || "");
 
   useEffect(() => {
-    if (session?.backendToken) {
-      setLoading(true);
-      setIsForbidden(false);
-      const fetchTransactions = async () => {
-        try {
-          const response = await fetch(
-            `${BACKEND_API_URL}/api/transactions/me?page=${currentPage}`,
-            {
-              headers: { Authorization: `Bearer ${session.backendToken}` },
-            }
-          );
+    const handler = setTimeout(() => {
+      const params = new URLSearchParams();
+      params.set("page", "1");
+      if (searchTerm) {
+        params.set("search", searchTerm);
+      }
+      if (statusFilter) {
+        params.set("status", statusFilter);
+      }
+      router.push(`${pathname}?${params.toString()}`);
+    }, 500);
 
-         
-          if (response.status === 403) {
-            setIsForbidden(true);
-            return; 
-          }
-          if (!response.ok) {
-            throw new Error("Failed to fetch transactions.");
-          }
+    return () => clearTimeout(handler);
+  }, [searchTerm, statusFilter, pathname, router]);
 
-          const data = await response.json();
-          setTransactions(data.transactions);
-          setTotalPages(data.totalPages);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchTransactions();
+  const handlePageChange = (newPage) => {
+    const params = new URLSearchParams();
+    params.set("page", newPage.toString());
+    if (searchTerm) {
+      params.set("search", searchTerm);
     }
-  }, [session, currentPage]);
+    if (statusFilter) {
+      params.set("status", statusFilter);
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
-  if (loading) {
-    return (
-      <div className="flex-1 p-8 bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  const handleStatusChange = (value) => {
+    setStatusFilter(value === "all" ? "" : value);
+  };
 
-  
   if (isForbidden) {
-    return <UpgradePlanPrompt featureName="Transaction Management" />;
-  }
-
-  if (error) {
-    return (
-      <div className="flex-1 p-8 bg-gray-50 text-center text-red-500">
-        Error: {error}
-      </div>
-    );
+    return <UpgradePlanPrompt featureName="Transaction and sales tracking" />;
   }
 
   return (
@@ -86,17 +74,33 @@ export default function ClientWrapper() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Transactions</h2>
           <div className="flex items-center gap-2">
-            <Input placeholder="Search" className="w-64" />
-            <Button variant="outline">
-              <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
-            </Button>
+            <Input
+              placeholder="Search by ID or Status..."
+              className="w-64"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[180px]">
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="sold">Sold</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        <TransactionsTable transactions={transactions} />
+        <TransactionsTable transactions={initialTransactions} />
         <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          currentPage={initialPage}
+          totalPages={initialTotalPages}
+          onPageChange={handlePageChange}
         />
       </div>
     </div>

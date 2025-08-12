@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
+import imageCompression from "browser-image-compression";
 import {
   Form,
   FormControl,
@@ -36,7 +37,9 @@ const diaryFormSchema = z.object({
   category: z.string().min(1, "Please select a category."),
   subject: z.string().max(100).optional(),
   description: z.string().max(500).optional(),
-  artworkPhotos: z.array(z.any()).nonempty("Please upload at least one photo."),
+  artworkPhotos: z.array(z.any()).refine((files) => files.length > 0, {
+    message: "Please upload at least one photo.",
+  }),
   studioLife: z.string().max(500).optional(),
 });
 
@@ -45,6 +48,7 @@ export default function NewDiaryForm() {
   const [existingPhotos, setExistingPhotos] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [photosCleared, setPhotosCleared] = useState(false);
 
   const { data: session } = useSession();
   const router = useRouter();
@@ -66,6 +70,67 @@ export default function NewDiaryForm() {
     },
   });
 
+  const storageKey = isEditMode
+    ? `diary-form-draft-${entryId}`
+    : "diary-form-draft-new";
+  const watchedValues = form.watch();
+  const isMounted = useRef(false);
+
+  useEffect(() => {
+    if (isMounted.current) {
+      if (
+        watchedValues.category ||
+        watchedValues.subject ||
+        watchedValues.description ||
+        watchedValues.studioLife
+      ) {
+        localStorage.setItem(storageKey, JSON.stringify(watchedValues));
+      }
+    }
+  }, [watchedValues, storageKey]);
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(storageKey);
+    if (savedDraft) {
+      const draftData = JSON.parse(savedDraft);
+      toast(
+        (t) => (
+          <div className="flex flex-col gap-2">
+            <span>You have an unsaved draft. Restore it?</span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  form.reset({
+                    ...draftData,
+                    date: draftData.date ? new Date(draftData.date) : undefined,
+                  });
+                  toast.dismiss(t.id);
+                  toast.success("Draft restored!");
+                }}
+              >
+                Restore
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  localStorage.removeItem(storageKey);
+                  toast.dismiss(t.id);
+                }}
+              >
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        ),
+        { duration: 10000 }
+      );
+    }
+    isMounted.current = true;
+  }, [storageKey, form]);
+
+
   useEffect(() => {
     if (isEditMode) {
       const fetchEntry = async () => {
@@ -79,13 +144,13 @@ export default function NewDiaryForm() {
           );
           if (!res.ok) throw new Error("Failed to fetch diary entry.");
           const data = await res.json();
-
+          const photos = data.artworkPhotos || [];
           form.reset({
             ...data,
             date: parseISO(data.date),
-            artworkPhotos: data.artworkPhotos || [],
+            artworkPhotos: photos,
           });
-          setExistingPhotos(data.artworkPhotos || []);
+          setExistingPhotos(photos);
         } catch (error) {
           toast.error(error.message);
           router.back();
@@ -100,22 +165,61 @@ export default function NewDiaryForm() {
   }, [entryId, isEditMode, session, router, form]);
 
   const onDrop = useCallback(
-    (acceptedFiles) => {
-      const newFiles = acceptedFiles.map((file) =>
-        Object.assign(file, { preview: URL.createObjectURL(file) })
-      );
-      const updatedFiles = [...files, ...newFiles];
-      setFiles(updatedFiles);
-      form.setValue("artworkPhotos", updatedFiles);
+    async (acceptedFiles) => {
+      const compressionToastId = toast.loading("Compressing images...");
+      const compressionOptions = {
+        maxSizeMB: 1.5,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      try {
+        const compressedFiles = await Promise.all(
+          acceptedFiles.map(async (file) => {
+            const compressedFile = await imageCompression(
+              file,
+              compressionOptions
+            );
+            return Object.assign(compressedFile, {
+              preview: URL.createObjectURL(compressedFile),
+              name: file.name,
+            });
+          })
+        );
+        const updatedFiles = [...files, ...compressedFiles];
+        setFiles(updatedFiles);
+        setPhotosCleared(false); 
+        form.setValue("artworkPhotos", [...existingPhotos, ...updatedFiles], {
+          shouldValidate: true,
+        });
+        toast.success("Images ready for upload!", { id: compressionToastId });
+      } catch (error) {
+        toast.error("Failed to compress images.", { id: compressionToastId });
+        console.error(error);
+      }
     },
-    [form, files]
+    [form, files, existingPhotos]
   );
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: { "image/jpeg": [], "image/png": [] },
+  });
 
   const removeFile = (fileToRemove) => {
     URL.revokeObjectURL(fileToRemove.preview);
     const updatedFiles = files.filter((file) => file !== fileToRemove);
     setFiles(updatedFiles);
-    form.setValue("artworkPhotos", updatedFiles);
+    form.setValue("artworkPhotos", [...existingPhotos, ...updatedFiles], {
+      shouldValidate: true,
+    });
+  };
+
+  const handleRemoveAllPhotos = () => {
+    toast.success("Photos marked for removal. Save the form to confirm.");
+    setExistingPhotos([]);
+    setFiles([]);
+    setPhotosCleared(true);
+    form.setValue("artworkPhotos", [], { shouldValidate: true });
   };
 
   useEffect(() => {
@@ -123,6 +227,13 @@ export default function NewDiaryForm() {
   }, [files]);
 
   const onSubmit = async (data) => {
+    
+    const isValid = await form.trigger();
+    if (!isValid) {
+      toast.error("Please fill out all required fields.");
+      return;
+    }
+
     setIsSubmitting(true);
     const loadingToastId = toast.loading(
       isEditMode ? "Updating diary..." : "Uploading diary..."
@@ -135,14 +246,17 @@ export default function NewDiaryForm() {
     formData.append("description", data.description || "");
     formData.append("studioLife", data.studioLife || "");
 
-    if (files.length > 0) {
+    if (isEditMode && photosCleared) {
+      formData.append("photosCleared", "true");
+    }
+
+    if (files.length > 0 && !photosCleared) {
       files.forEach((file) => formData.append("artworkPhotos", file));
     }
 
     const url = isEditMode
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/diary/${entryId}`
       : `${process.env.NEXT_PUBLIC_API_URL}/api/diary`;
-
     const method = isEditMode ? "PUT" : "POST";
 
     try {
@@ -155,6 +269,9 @@ export default function NewDiaryForm() {
         const errorData = await response.json();
         throw new Error(errorData.message);
       }
+
+      localStorage.removeItem(storageKey);
+
       toast.success(isEditMode ? "Diary updated!" : "Diary created!", {
         id: loadingToastId,
       });
@@ -191,7 +308,6 @@ export default function NewDiaryForm() {
           <X className="h-5 w-5" />
         </Button>
       </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -211,7 +327,6 @@ export default function NewDiaryForm() {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="category"
@@ -236,7 +351,6 @@ export default function NewDiaryForm() {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="subject"
@@ -245,7 +359,7 @@ export default function NewDiaryForm() {
                 <FormLabel>Subject</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Write down the description in 500 letters"
+                    placeholder="e.g., 'Sunset Over the Lake'"
                     {...field}
                   />
                 </FormControl>
@@ -253,7 +367,6 @@ export default function NewDiaryForm() {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="description"
@@ -280,9 +393,18 @@ export default function NewDiaryForm() {
                 <FormLabel>Artwork Photos</FormLabel>
                 {isEditMode && existingPhotos.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">
-                      Current photos (uploading new files will replace these):
-                    </p>
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="text-sm text-gray-600">Current photos:</p>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleRemoveAllPhotos}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Remove All
+                      </Button>
+                    </div>
                     <div className="flex flex-wrap gap-4">
                       {existingPhotos.map((photo) => (
                         <div
@@ -302,13 +424,13 @@ export default function NewDiaryForm() {
                 )}
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div
-                    {...useDropzone({ onDrop }).getRootProps()}
+                    {...getRootProps()}
                     className="w-full md:w-1/2 h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col justify-center items-center text-center p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
-                    <input {...useDropzone({ onDrop }).getInputProps()} />
+                    <input {...getInputProps()} />
                     <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
                     <p className="text-gray-500 text-sm">
-                      click or drag to upload photo
+                      Click or drag to upload photo
                     </p>
                   </div>
                   <div className="w-full md:w-1/2 bg-slate-50 p-4 rounded-lg">
@@ -375,7 +497,6 @@ export default function NewDiaryForm() {
               </FormItem>
             )}
           />
-
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700"

@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import ClientWrapper from "./client-wrapper";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;

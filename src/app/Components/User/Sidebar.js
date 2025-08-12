@@ -53,7 +53,7 @@ export default function Sidebar() {
       title: "Transaction Management",
       icon: Layers,
       href: userId ? `/user/${userId}/transaction-management` : "#",
-      feature: "Transaction and sales tracking",
+      feature: "Transaction Management",
     },
     {
       title: "Event Management",

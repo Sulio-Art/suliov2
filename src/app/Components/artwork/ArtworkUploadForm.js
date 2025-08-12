@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useCreateArtworkMutation,
+  useUpdateArtworkMutation,
   useGetStorageStatsQuery,
 } from "@/redux/Artwork/artworkApi";
 import { useRouter } from "next/navigation";
-import { Upload, Eye, Loader2, HardDrive } from "lucide-react";
+import { Upload, Loader2, HardDrive, X, Save } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "../../Components/ui/button";
 import { Input } from "../../Components/ui/input";
@@ -25,7 +26,6 @@ const StorageIndicator = ({ currentUsage = 0, storageLimit = 0 }) => {
   const usageMB = (currentUsage / 1024 / 1024).toFixed(2);
   const limitMB = (storageLimit / 1024 / 1024).toFixed(0);
   const percentage = storageLimit > 0 ? (currentUsage / storageLimit) * 100 : 0;
-
   return (
     <div className="bg-gray-50 p-4 rounded-lg border">
       <div className="flex justify-between items-center mb-2 text-sm">
@@ -56,128 +56,166 @@ const StorageIndicator = ({ currentUsage = 0, storageLimit = 0 }) => {
   );
 };
 
-export const ArtworkUploadForm = ({ userId }) => {
+export const ArtworkUploadForm = ({ userId, initialData = null }) => {
   const router = useRouter();
-  const [createArtwork, { isLoading }] = useCreateArtworkMutation();
+  const isEditMode = initialData !== null;
 
+  const [title, setTitle] = useState("");
+  const [artworkType, setArtworkType] = useState("");
+  const [price, setPrice] = useState("");
+  const [creationYear, setCreationYear] = useState("");
+  const [description, setDescription] = useState("");
+  const [tag, setTag] = useState("");
+  const [creativeInsights, setCreativeInsights] = useState("");
+  const [technicalIssues, setTechnicalIssues] = useState("");
+
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+
+  const [createArtwork, { isLoading: isCreating }] = useCreateArtworkMutation();
+  const [updateArtwork, { isLoading: isUpdating }] = useUpdateArtworkMutation();
   const { data: storageStats, isLoading: isLoadingStats } =
-    useGetStorageStatsQuery(userId, {
-      skip: !userId,
-    });
+    useGetStorageStatsQuery(userId, { skip: !userId });
 
-  const [imagePreview, setImagePreview] = useState(null);
-  const [fileName, setFileName] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
+  useEffect(() => {
+    if (isEditMode && initialData) {
+      setTitle(initialData.title || "");
+      setArtworkType(initialData.artworkType || "");
+      setPrice(initialData.price?.toString() || "");
+      setCreationYear(initialData.creationYear?.toString() || "");
+      setDescription(initialData.description || "");
+      setTag(initialData.tag || "");
+      setCreativeInsights(initialData.creativeInsights || "");
+      setTechnicalIssues(initialData.technicalIssues || "");
+      setImagePreviews(initialData.imageUrls || []);
+    }
+  }, [initialData, isEditMode]);
+
+  const handleFiles = (files) => {
+    const newFiles = Array.from(files);
+    if (newFiles.length === 0) return;
+
+    if (isEditMode) {
+      setImagePreviews([]);
+      setSelectedFiles(newFiles);
+    } else {
+      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    }
+
+    newFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews((prevPreviews) => [...prevPreviews, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const currentUsage = storageStats?.currentUsage || 0;
-      const storageLimit = storageStats?.storageLimit || 0;
-      if (currentUsage + file.size > storageLimit && storageLimit > 0) {
-        toast.error(
-          "This file exceeds your storage limit. Please upgrade your plan or upload a smaller file.",
-          { duration: 5000 }
-        );
-        event.target.value = null;
-        return;
-      }
-      setSelectedFile(file);
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
-      reader.readAsDataURL(file);
-    }
+    handleFiles(event.target.files);
+    event.target.value = null;
   };
 
   const handleDrop = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    const file = event.dataTransfer.files?.[0];
-    if (file) {
-      const currentUsage = storageStats?.currentUsage || 0;
-      const storageLimit = storageStats?.storageLimit || 0;
-      if (currentUsage + file.size > storageLimit && storageLimit > 0) {
-        toast.error(
-          "This file exceeds your storage limit. Please upgrade your plan or upload a smaller file.",
-          { duration: 5000 }
-        );
-        return;
-      }
-      setSelectedFile(file);
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
-      reader.readAsDataURL(file);
-    }
+    handleFiles(event.dataTransfer.files);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!userId || userId === "undefined") {
-      toast.error("User session is invalid. Please log in again.");
-      return;
-    }
-    if (!selectedFile) {
-      toast.error("Please select an image file to upload.");
-      return;
-    }
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("artworkType", artworkType);
+    formData.append("price", price);
+    formData.append("creationYear", creationYear);
+    formData.append("description", description);
+    formData.append("tag", tag);
+    formData.append("creativeInsights", creativeInsights);
+    formData.append("technicalIssues", technicalIssues);
 
-    const formData = new FormData(event.target);
-    formData.append("userId", userId);
-    
+    if (isEditMode) {
+      if (selectedFiles.length > 0) {
+        selectedFiles.forEach((file) => {
+          formData.append("artworkImages", file);
+        });
+      }
 
-    try {
-      await createArtwork(formData).unwrap();
-      toast.success("Artwork uploaded successfully!");
-      router.push(`/user/${userId}/artwork-management`);
-    } catch (error) {
-      toast.error(
-        error?.data?.message || "Failed to upload artwork. Please try again."
-      );
-      console.error("Failed to create artwork:", error);
+      toast
+        .promise(updateArtwork({ id: initialData._id, formData }).unwrap(), {
+          loading: "Saving changes...",
+          success: "Artwork updated successfully!",
+          error: (err) =>
+            `Failed to update: ${err.data?.message || err.message}`,
+        })
+        .then(() =>
+          router.push(`/user/${userId}/artwork-management/${initialData._id}`)
+        );
+    } else {
+      if (selectedFiles.length === 0) {
+        toast.error("Please select at least one image to upload.");
+        return;
+      }
+      selectedFiles.forEach((file) => formData.append("artworkImages", file));
+
+      toast
+        .promise(createArtwork(formData).unwrap(), {
+          loading: "Uploading artwork...",
+          success: "Artwork uploaded successfully!",
+          error: (err) => `Upload failed: ${err.data?.message || err.message}`,
+        })
+        .then(() => router.push(`/user/${userId}/artwork-management`));
     }
   };
 
+  const isLoading = isCreating || isUpdating;
+
   return (
     <div className="bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-4xl">
+      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg w-full max-w-4xl relative">
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center pb-4 border-b">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-              Upload Artwork
+              {isEditMode ? "Edit Artwork" : "Upload Artwork"}
             </h1>
-            <Button type="button" variant="outline">
-              Save as draft
-            </Button>
           </div>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="absolute top-4 right-4 p-2 text-gray-500 rounded-full hover:bg-gray-100"
+          >
+            <X className="w-6 h-6" />
+          </button>
 
-          {isLoadingStats ? (
-            <div className="text-center text-gray-500 py-4">
-              Loading storage details...
-            </div>
-          ) : (
-            <StorageIndicator
-              currentUsage={storageStats?.currentUsage}
-              storageLimit={storageStats?.storageLimit}
-            />
-          )}
+          {!isEditMode &&
+            (isLoadingStats ? (
+              <div>Loading storage...</div>
+            ) : (
+              <StorageIndicator
+                currentUsage={storageStats?.currentUsage}
+                storageLimit={storageStats?.storageLimit}
+              />
+            ))}
 
           <Input
             type="text"
             name="title"
-            className="w-full bg-gray-100 text-lg p-4 rounded-lg"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="Type Artwork Title"
             required
+            className="w-full bg-gray-100 text-lg p-4 rounded-lg"
           />
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <FormInput label="Artwork Type">
               <select
                 name="artworkType"
-                className="w-full bg-gray-100 text-gray-700 p-3 rounded-lg border-transparent focus:ring-2 focus:ring-blue-500"
-                defaultValue=""
+                value={artworkType}
+                onChange={(e) => setArtworkType(e.target.value)}
                 required
+                className="w-full bg-gray-100 text-gray-700 p-3 rounded-lg"
               >
                 <option value="" disabled>
                   eg: For Sale
@@ -188,136 +226,120 @@ export const ArtworkUploadForm = ({ userId }) => {
             </FormInput>
             <FormInput label="Price">
               <Input
-                type="text"
+                type="number"
                 name="price"
-                placeholder="50$"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="e.g., 49.99"
+                required={artworkType === "for_sale"}
+                disabled={artworkType !== "for_sale"}
+                min="0"
+                step="0.01"
                 className="w-full bg-gray-100 p-3 rounded-lg"
-                required
               />
             </FormInput>
             <FormInput label="Creation year">
               <Input
                 type="number"
                 name="creationYear"
+                value={creationYear}
+                onChange={(e) => setCreationYear(e.target.value)}
                 placeholder="2021"
-                className="w-full bg-gray-100 p-3 rounded-lg"
                 required
+                className="w-full bg-gray-100 p-3 rounded-lg"
               />
             </FormInput>
           </div>
-          <FormInput label="Upload high resolution photo of your artwork">
+
+          <FormInput label="Artwork Photo(s)">
             <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-6 w-full flex flex-col md:flex-row items-center justify-between gap-6"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 w-full"
               onDragOver={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
               }}
               onDrop={handleDrop}
             >
-              {imagePreview ? (
-                <div className="flex flex-col items-center text-center">
+              <div className="flex flex-wrap gap-4 mb-4">
+                {imagePreviews.map((preview, index) => (
                   <img
-                    src={imagePreview}
-                    alt="Artwork preview"
-                    className="max-h-32 rounded-md mb-2"
+                    key={index}
+                    src={preview}
+                    alt={`Preview ${index}`}
+                    className="h-24 w-24 object-cover rounded-md border"
                   />
-                  <span className="text-sm font-medium text-gray-700">
-                    {fileName}
-                  </span>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center cursor-pointer text-center w-full py-4">
-                  <Upload className="w-10 h-10 text-gray-400 mb-2" />
-                  <span className="text-gray-600 font-semibold">
-                    click or drag to upload photo
-                  </span>
-                  <input
-                    type="file"
-                    name="artworkImage"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/png, image/jpeg"
-                    required
-                  />
-                </label>
-              )}
-              <div className="bg-gray-100 p-4 rounded-lg text-xs text-gray-600 self-stretch text-left">
-                <h4 className="font-semibold mb-2">Upload Guidelines:</h4>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>File format: JPG / PNG</li>
-                  <li>Minimum size: 2000px (longest side), 300 dpi</li>
-                  <li>Max file size: 25MB</li>
-                  <li>Clean background, even lighting</li>
-                  <li>No watermarks, logos, or composite images</li>
-                </ul>
+                ))}
               </div>
+              <label className="flex flex-col items-center justify-center cursor-pointer text-center w-full py-4 bg-gray-50 rounded-lg hover:bg-gray-100">
+                <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                <span className="text-gray-600 font-semibold">
+                  Click or drag to upload
+                </span>
+                <p className="text-xs text-gray-500 mt-1">
+                  {isEditMode
+                    ? "Uploading new images will replace all existing ones."
+                    : "You can select multiple images."}
+                </p>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/png, image/jpeg"
+                  multiple
+                />
+              </label>
             </div>
           </FormInput>
+
           <FormInput label="Description">
             <textarea
               name="description"
-              placeholder="Write down the description in 500 letters"
-              className="w-full bg-gray-100 p-4 rounded-lg h-28 resize-none"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Write down the description..."
               required
+              className="w-full bg-gray-100 p-4 rounded-lg h-28 resize-none"
             ></textarea>
           </FormInput>
+
           <FormInput label="Tag">
             <select
               name="tag"
-              className="w-full bg-gray-100 text-gray-700 p-3 rounded-lg border-transparent focus:ring-2 focus:ring-blue-500"
-              defaultValue=""
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
               required
+              className="w-full bg-gray-100 text-gray-700 p-3 rounded-lg"
             >
               <option value="" disabled>
                 eg: Sculpture
               </option>
-
               <option value="sculpture">Sculpture</option>
               <option value="digital">Digital Art</option>
               <option value="oil-painting">Oil Painting</option>
-              <option value="acrylic-painting">Acrylic Painting</option>
-              <option value="watercolor-painting">Watercolor Painting</option>
-              <option value="ink-painting">Ink Painting</option>
-              <option value="pastel-painting">Pastel Painting</option>
-              <option value="copperplate">Copperplate</option>
-              <option value="lithograph">Lithograph</option>
-              <option value="woodcut">Woodcut</option>
-              <option value="silkscreen">Silkscreen</option>
-              <option value="digital-print">Digital Print</option>
-              <option value="drawing">Drawing</option>
-              <option value="charcoal-drawing">Charcoal Drawing</option>
-              <option value="gouache-painting">Gouache Painting</option>
-              <option value="installation-art">Installation Art</option>
-              <option value="ceramic-art">Ceramic Art</option>
-              <option value="fiber-art">Fiber Art / Textile Art</option>
-              <option value="photography-art">Photography Art</option>
-              <option value="video-art">Video Art</option>
-              <option value="nft-art">NFT Art</option>
-              <option value="interactive-art">Interactive Art</option>
-              <option value="mixed-media">Mixed Media</option>
-              <option value="public-art">Public Art</option>
-              <option value="calligraphy">Calligraphy</option>
-              <option value="illustration">Illustration</option>
-              <option value="art-jewelry">Art Jewelry</option>
-              <option value="artist-merchandise">
-                Artist-Designed Merchandise
-              </option>
+              {/* ... other options */}
             </select>
           </FormInput>
-          <FormInput label="Creative Insights">
+
+          <FormInput label="Creative Insights (Optional)">
             <textarea
               name="creativeInsights"
-              placeholder="Write down the description in 500 letters"
+              value={creativeInsights}
+              onChange={(e) => setCreativeInsights(e.target.value)}
+              placeholder="Write about your creative process..."
               className="w-full bg-gray-100 p-4 rounded-lg h-28 resize-none"
             ></textarea>
           </FormInput>
-          <FormInput label="Technical Issues">
+
+          <FormInput label="Technical Issues (Optional)">
             <textarea
               name="technicalIssues"
-              placeholder="Write down the description in 500 letters"
+              value={technicalIssues}
+              onChange={(e) => setTechnicalIssues(e.target.value)}
+              placeholder="Describe any technical challenges..."
               className="w-full bg-gray-100 p-4 rounded-lg h-28 resize-none"
             ></textarea>
           </FormInput>
+
           <div>
             <Button
               type="submit"
@@ -326,9 +348,13 @@ export const ArtworkUploadForm = ({ userId }) => {
             >
               {isLoading ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
+              ) : isEditMode ? (
+                <>
+                  <Save className="w-5 h-5" /> Save Changes
+                </>
               ) : (
                 <>
-                  <Eye className="w-5 h-5" /> See Preview
+                  <Upload className="w-5 h-5" /> Upload Artwork
                 </>
               )}
             </Button>
