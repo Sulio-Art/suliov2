@@ -1,8 +1,9 @@
 import { useSession } from "next-auth/react";
 import { planDetails } from "../app/Components/subscription/planDetails";
 
+// A map defining which paid plans get access to specific premium features.
 const featureAccessMap = {
-  "Transaction and sales tracking": { plans: ["plus", "premium", "pro"] },
+  "Transaction Management": { plans: ["plus", "premium", "pro"] },
   "Personalized greetings": { plans: ["plus", "premium", "pro"] },
   "Customizable chat responses": { plans: ["pro"] },
   "AI-generated buyer recommendations": { plans: ["plus", "premium", "pro"] },
@@ -25,9 +26,13 @@ export function useSubscription() {
    * @returns {boolean} - True if the user has access, false otherwise.
    */
   const hasAccess = (featureName) => {
+    // If featureName is not in our map, it's a standard feature available to all.
     if (!featureName || !featureAccessMap[featureName]) {
       return true;
     }
+
+    // --- FIX: Check if the user's current plan is included in the feature's allowed plans.
+    // This is safer as it defaults to denying access for unlisted plans.
     return featureAccessMap[featureName].plans.includes(plan);
   };
 

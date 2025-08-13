@@ -6,6 +6,7 @@ import { Loader2, AlertTriangle } from "lucide-react";
 import ProfileHeader from "../../../Components/profile/ProfileHeader";
 import ProfileDetails from "../../../Components/profile/ProfileDetails";
 import ProfileEditForm from "../../../Components/profile/ProfileEditForm";
+import { Dialog } from "@headlessui/react";
 import toast from "react-hot-toast";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -35,63 +36,86 @@ export default function ClientWrapper() {
       };
       fetchProfile();
     } else if (status === "unauthenticated") {
-        setLoading(false);
+      setLoading(false);
     }
   }, [session, status]);
 
   const handleSave = async (formData) => {
     try {
-        const response = await fetch(`${BACKEND_API_URL}/profiles/me`, {
-            method: 'PUT',
-            headers: { Authorization: `Bearer ${session.backendToken}` },
-            body: formData,
-        });
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.message || "Failed to update profile.");
-        }
-        const updatedProfile = await response.json();
-        setProfile(updatedProfile);
-        toast.success("Profile updated successfully!");
-        setIsEditing(false);
+      const response = await fetch(`${BACKEND_API_URL}/profiles/me`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${session.backendToken}` },
+        body: formData,
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Failed to update profile.");
+      }
+      const updatedProfile = await response.json();
+      setProfile(updatedProfile);
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
     } catch (err) {
-        toast.error(err.message);
+      toast.error(err.message);
     }
   };
 
   if (loading) {
-    return <div className="flex-1 p-8 flex items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-blue-600" /></div>;
+    return (
+      <div className="flex-1 p-8 flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="flex-1 p-8 flex flex-col items-center justify-center text-red-500"><AlertTriangle className="h-10 w-10 mb-2"/><span>{error}</span></div>;
+    return (
+      <div className="flex-1 p-8 flex flex-col items-center justify-center text-red-500">
+        <AlertTriangle className="h-10 w-10 mb-2" />
+        <span>{error}</span>
+      </div>
+    );
   }
-  
+
   if (!session) {
-      return <div className="flex-1 p-8 text-center">Please log in to view your profile.</div>
+    return (
+      <div className="flex-1 p-8 text-center">
+        Please log in to view your profile.
+      </div>
+    );
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="max-w-5xl mx-auto">
-        <ProfileHeader 
-            profile={profile} 
-            isEditing={isEditing} 
-            setIsEditing={setIsEditing} 
-        />
-        <div className="transform -translate-y-12">
-            <main className="p-4 md:p-8">
-                {isEditing ? (
-                    <ProfileEditForm 
-                        profile={profile} 
-                        onSave={handleSave}
-                        onCancel={() => setIsEditing(false)}
-                    />
-                ) : (
-                    <ProfileDetails profile={profile} />
-                )}
-            </main>
-        </div>
+    <div className="flex flex-col h-full w-full bg-gray-100">
+      <ProfileHeader
+        profile={profile}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+      />
+      <div className="flex-1 flex flex-col">
+        <main className="p-4 md:p-8 flex-1">
+          <ProfileDetails profile={profile} />
+          {/* Modal dialog for editing profile */}
+          <Dialog
+            open={isEditing}
+            onClose={() => setIsEditing(false)}
+            className="z-50"
+          >
+            <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+            <div className="fixed inset-0 flex items-center justify-center">
+              <Dialog.Panel className="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl border max-h-[100vh] overflow-y-auto">
+                <Dialog.Title className="text-2xl font-bold mb-3">
+                  Edit Profile
+                </Dialog.Title>
+                <ProfileEditForm
+                  profile={profile}
+                  onSave={handleSave}
+                  onCancel={() => setIsEditing(false)}
+                />
+              </Dialog.Panel>
+            </div>
+          </Dialog>
+        </main>
       </div>
     </div>
   );

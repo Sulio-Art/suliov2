@@ -11,7 +11,6 @@ import { planDetails, featureList } from "./planDetails";
 import { ArrowRight, Check, X } from "lucide-react"; 
 import { format } from "date-fns";
 
-
 const FeatureValue = ({ value }) => {
   if (value === "✓") {
     return <Check className="h-5 w-5 text-green-500" />;
@@ -49,7 +48,9 @@ export default function SubscriptionDetails({ subscription }) {
             <div className="space-y-4">
               {featureList.map((featureName, index) => {
                 const featureValue = currentPlan.features[featureName];
-                if (featureValue === "X") return null;
+
+                // --- FIX: The line that filtered out missing features has been removed. ---
+                // This will now render all features, showing ✓ for included and X for excluded ones.
 
                 return (
                   <div

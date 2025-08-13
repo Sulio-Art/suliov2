@@ -88,17 +88,21 @@ export default function RegisterPage() {
     }
   }, [setValue]);
 
-  const autoLogin = async (token, email, status) => {
+  // --- CRITICAL FIX 1: Update the autoLogin function to accept and use the userId ---
+  const autoLogin = async (token, email, userId, status) => {
     const loginResult = await signIn("credentials", {
       token,
       email,
+      userId, // <-- ADD THIS LINE to pass userId to NextAuth
       redirect: false,
     });
     if (loginResult?.error) {
       toast.error("Auto-login failed. Please log in manually.");
       router.push("/auth/login");
     } else {
-      router.push(`/dashboard?status=${status}`);
+      // --- CRITICAL FIX 2: Construct the correct dashboard URL with the userId and refresh ---
+      router.push(`/user/${userId}/dashboard?status=${status}`);
+      router.refresh(); // Ensure session state is updated everywhere
     }
   };
 
@@ -116,7 +120,13 @@ export default function RegisterPage() {
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.message || "Registration failed.");
-      await autoLogin(result.token, data.email, "registration_complete");
+      // --- CRITICAL FIX 3: Pass the userId from the API response to autoLogin ---
+      await autoLogin(
+        result.token,
+        data.email,
+        result.user._id,
+        "registration_complete"
+      );
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -128,19 +138,18 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     setUserExistsError(false);
     try {
+      // This now points to the backend route that creates an unverified user and sends an OTP
       const response = await fetch(`${BACKEND_API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, isEmailPreverified: false }),
+        body: JSON.stringify(data),
       });
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.message || "Registration failed.");
       setRegisteredEmail(data.email);
-      setShowOtpForm(true);
-      toast.success(
-        "Registration successful! An OTP has been sent to your email."
-      );
+      setShowOtpForm(true); // Proceed to OTP form
+      toast.success(result.message);
     } catch (err) {
       if (err.message.includes("already exists")) {
         setUserExistsError(true);
@@ -155,6 +164,7 @@ export default function RegisterPage() {
   const onStandardOtpSubmit = async (data) => {
     setIsSubmitting(true);
     try {
+      // This now points to the dedicated OTP verification route
       const response = await fetch(`${BACKEND_API_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -163,7 +173,13 @@ export default function RegisterPage() {
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.message || "OTP verification failed.");
-      await autoLogin(result.token, registeredEmail, "registration_complete");
+      // --- CRITICAL FIX 4: Pass the userId from the API response to autoLogin ---
+      await autoLogin(
+        result.token,
+        registeredEmail,
+        result.user._id,
+        "registration_complete"
+      );
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -181,7 +197,7 @@ export default function RegisterPage() {
     setUserExistsError(false);
     try {
       const response = await fetch(
-        `${BACKEND_API_URL}/api/auth/instagram/send-email-otp`,
+        `${BACKEND_API_URL}/api/auth/instagram/send-instagram-email-otp`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -212,7 +228,7 @@ export default function RegisterPage() {
     try {
       const email = getValues("email");
       const response = await fetch(
-        `${BACKEND_API_URL}/api/auth/instagram/verify-email-otp`,
+        `${BACKEND_API_URL}/api/auth/instagram/verify-instagram-email-otp`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -5,7 +5,7 @@ export const featureList = [
   "Storage space",
   "Artwork recommendations",
   "Daily fortune draw game",
-  "Transaction and sales tracking",
+  "Transaction Management", // Standardized name
   "Fraud protection",
   "Customizable chat responses",
   "AI-generated buyer recommendations",
@@ -18,15 +18,16 @@ export const featureList = [
 
 export const planDetails = {
   free: {
+    id: "free",
     name: "Free",
     pricing: {
       monthly: {
-        price: "FREE",
+        price: "$0",
         billing: "Forever free for individuals",
         amount: 0,
       },
       yearly: {
-        price: "FREE",
+        price: "$0",
         billing: "Forever free for individuals",
         amount: 0,
       },
@@ -38,7 +39,7 @@ export const planDetails = {
       "Storage space": "20MB",
       "Artwork recommendations": "Simple",
       "Daily fortune draw game": "✓",
-      "Transaction and sales tracking": "X",
+      "Transaction Management": "X",
       "Fraud protection": "X",
       "Customizable chat responses": "X",
       "AI-generated buyer recommendations": "X",
@@ -50,6 +51,7 @@ export const planDetails = {
     },
   },
   plus: {
+    id: "plus",
     name: "Plus",
     pricing: {
       monthly: { price: "$9", billing: "$9 billed monthly", amount: 9 },
@@ -66,7 +68,7 @@ export const planDetails = {
       "Storage space": "50MB",
       "Artwork recommendations": "Personalized",
       "Daily fortune draw game": "✓",
-      "Transaction and sales tracking": "✓",
+      "Transaction Management": "✓",
       "Fraud protection": "X",
       "Customizable chat responses": "X",
       "AI-generated buyer recommendations": "✓",
@@ -78,7 +80,8 @@ export const planDetails = {
     },
   },
   premium: {
-    name: "Prem",
+    id: "premium",
+    name: "Premium", // Corrected name from "Prem" for consistency
     pricing: {
       monthly: { price: "$16", billing: "$16 billed monthly", amount: 16 },
       yearly: {
@@ -94,7 +97,7 @@ export const planDetails = {
       "Storage space": "200MB",
       "Artwork recommendations": "Advanced",
       "Daily fortune draw game": "✓",
-      "Transaction and sales tracking": "✓",
+      "Transaction Management": "✓",
       "Fraud protection": "✓",
       "Customizable chat responses": "X",
       "AI-generated buyer recommendations": "✓",
@@ -106,6 +109,7 @@ export const planDetails = {
     },
   },
   pro: {
+    id: "pro",
     name: "Pro",
     pricing: {
       monthly: { price: "$32", billing: "$32 billed monthly", amount: 32 },
@@ -122,7 +126,7 @@ export const planDetails = {
       "Storage space": "500MB",
       "Artwork recommendations": "Advanced",
       "Daily fortune draw game": "✓",
-      "Transaction and sales tracking": "Detailed analytics",
+      "Transaction Management": "Detailed analytics",
       "Fraud protection": "Full",
       "Customizable chat responses": "✓",
       "AI-generated buyer recommendations": "✓",

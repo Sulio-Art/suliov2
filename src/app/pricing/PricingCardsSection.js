@@ -17,6 +17,15 @@ export default function PricingCardsSection() {
   const [isLoading, setIsLoading] = useState(null);
 
   const handlePayment = async (plan) => {
+    // --- FIX: Handle the 'Free' plan without initiating payment ---
+    if (plan.id === "free") {
+      toast.info("You are already on the Free plan!");
+      if (status === "authenticated") {
+        router.push(`/user/${session.user.id}/dashboard`);
+      }
+      return;
+    }
+
     if (status !== "authenticated") {
       toast.error("Please log in to choose a plan.");
       router.push("/auth/login");
@@ -27,6 +36,7 @@ export default function PricingCardsSection() {
     const planPricing = plan.pricing[billingCycle];
 
     try {
+      // --- FIX: Correct API endpoint path ---
       const orderResponse = await fetch(
         `${BACKEND_API_URL}/api/subscriptions/create`,
         {
@@ -83,19 +93,27 @@ export default function PricingCardsSection() {
             } else {
               toast.error(verifyData.message || "Payment verification failed.");
             }
+            setIsLoading(null);
           },
           prefill: { name: session.user.name, email: session.user.email },
           theme: { color: "#4F46E5" },
+          modal: {
+            ondismiss: function () {
+              setIsLoading(null); // Stop loading if user closes the modal
+            },
+          },
         };
         const rzp = new window.Razorpay(options);
         rzp.on("payment.failed", () => {
           toast.error("Payment failed. Please try again.");
+          setIsLoading(null);
         });
         rzp.open();
       };
       document.body.appendChild(script);
     } catch (error) {
       toast.error(error.message);
+      setIsLoading(null);
     }
   };
 
@@ -129,36 +147,37 @@ export default function PricingCardsSection() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Use the plan object directly from the single source of truth */}
         <PricingCard
           plan={planDetails.free}
           price={planDetails.free.pricing[billingCycle].price}
           billing={planDetails.free.pricing[billingCycle].billing}
           onSelect={handlePayment}
-          isLoading={isLoading === "free"}
+          isLoading={isLoading === planDetails.free.id}
           isPopular={false}
         />
         <PricingCard
-          plan={{ ...planDetails.plus, id: "plus" }}
+          plan={planDetails.plus}
           price={planDetails.plus.pricing[billingCycle].price}
           billing={planDetails.plus.pricing[billingCycle].billing}
           onSelect={handlePayment}
-          isLoading={isLoading === "plus"}
+          isLoading={isLoading === planDetails.plus.id}
           isPopular={false}
         />
         <PricingCard
-          plan={{ ...planDetails.premium, id: "premium" }}
+          plan={planDetails.premium}
           price={planDetails.premium.pricing[billingCycle].price}
           billing={planDetails.premium.pricing[billingCycle].billing}
           onSelect={handlePayment}
-          isLoading={isLoading === "premium"}
+          isLoading={isLoading === planDetails.premium.id}
           isPopular={true}
         />
         <PricingCard
-          plan={{ ...planDetails.pro, id: "pro" }}
+          plan={planDetails.pro}
           price={planDetails.pro.pricing[billingCycle].price}
           billing={planDetails.pro.pricing[billingCycle].billing}
           onSelect={handlePayment}
-          isLoading={isLoading === "pro"}
+          isLoading={isLoading === planDetails.pro.id}
           isPopular={false}
         />
       </div>

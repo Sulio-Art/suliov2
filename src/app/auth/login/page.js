@@ -129,6 +129,7 @@ function LoginPageContent() {
       setMode("reset-otp");
     } catch (err) {
       setResetError(err.message);
+      toast.error(err.message);
     }
     setResetLoading(false);
   };
@@ -136,13 +137,27 @@ function LoginPageContent() {
   const onVerifyOtp = async (data) => {
     setResetLoading(true);
     setResetError("");
-    setOtp(data.otp);
+    setOtp(data.otp); // Store OTP for the final password reset step
     try {
+      // --- SECURITY FIX: Call backend to verify OTP before proceeding ---
+      const res = await fetch(
+        `${BACKEND_API_URL}/api/auth/verify-password-reset-otp`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: resetEmail, otp: data.otp }),
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Invalid OTP");
+
+      // Only proceed if OTP is valid
       setMode("reset-password");
       setOtpVerified(true);
-      toast.success("OTP verified! Set your new password.");
+      toast.success("OTP verified! You can now set your new password.");
     } catch (err) {
       setResetError(err.message);
+      toast.error(err.message);
     }
     setResetLoading(false);
   };
@@ -157,7 +172,7 @@ function LoginPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: resetEmail,
-          otp,
+          otp, // Use the verified OTP
           newPassword: resetPassword,
         }),
       });
@@ -173,6 +188,7 @@ function LoginPageContent() {
       setResetConfirm("");
     } catch (err) {
       setResetError(err.message);
+      toast.error(err.message);
     }
     setResetLoading(false);
   };

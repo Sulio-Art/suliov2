@@ -75,3 +75,9 @@
   --rdp-selected-color: hsl(var(--primary-foreground));
   margin: 1em 0;
 }
+@layer utilities {
+  .backdrop-blur-sm {
+    --tw-backdrop-blur: blur(4px);
+    backdrop-filter: var(--tw-backdrop-filter, var(--tw-backdrop-blur, 0) var(--tw-backdrop-brightness, 1) var(--tw-backdrop-contrast, 1) var(--tw-backdrop-grayscale, 0) var(--tw-backdrop-hue-rotate, 0deg) var(--tw-backdrop-invert, 0) var(--tw-backdrop-opacity, 1) var(--tw-backdrop-saturate, 1) var(--tw-backdrop-sepia, 0));
+  }
+}
