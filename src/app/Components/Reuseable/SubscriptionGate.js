@@ -15,7 +15,6 @@ import { ShieldAlert } from "lucide-react";
 export default function SubscriptionGate({ children }) {
   const { data: session } = useSession();
 
-  // The gate is active if the status is 'expired'
   const isExpired = session?.subscriptionStatus === "expired";
 
   return (
@@ -45,7 +44,6 @@ export default function SubscriptionGate({ children }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* If not expired, render the actual page content */}
       {!isExpired && children}
     </>
   );

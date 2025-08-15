@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import ClientWrapper from "./client-wrapper";
+import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -49,5 +50,9 @@ export default async function EventManagementPage() {
   const session = await getServerSession(authOptions);
   const initialData = await getEvents(session?.backendToken);
 
-  return <ClientWrapper initialData={initialData} />;
+  return (
+    <ClientSideWrapper>
+      <ClientWrapper initialData={initialData} />
+    </ClientSideWrapper>
+  );
 }

@@ -52,7 +52,6 @@ function Section({
     green: "text-green-500",
   };
 
-  // Mobile layout content (resembling the screenshot image)
   const getMobileContent = () => {
     return (
       <div className="bg-white rounded-3xl shadow-lg p-6 max-w-[90%] mx-auto">
@@ -211,7 +210,6 @@ function Section({
           <div className="relative z-10">{getMobileContent()}</div>
         </div>
 
-        {/* Desktop Layout */}
         <div className="hidden md:block h-screen">
           <h1 className="text-4xl lg:text-5xl font-bold text-white text-center py-6 md:py-10">
             A Seamless Creative Workflow Powered by AI

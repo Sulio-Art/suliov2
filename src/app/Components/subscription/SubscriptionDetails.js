@@ -49,8 +49,7 @@ export default function SubscriptionDetails({ subscription }) {
               {featureList.map((featureName, index) => {
                 const featureValue = currentPlan.features[featureName];
 
-                // --- FIX: The line that filtered out missing features has been removed. ---
-                // This will now render all features, showing ✓ for included and X for excluded ones.
+             
 
                 return (
                   <div

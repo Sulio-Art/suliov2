@@ -12,16 +12,14 @@ async function getSubscription(token) {
   try {
     const response = await fetch(`${BACKEND_API_URL}/api/subscriptions/mine`, {
       headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store", // Always fetch latest subscription info
+      cache: "no-store",
     });
 
-    // A 404 is not an error, it just means no subscription exists
     if (response.status === 404) {
       return null;
     }
 
     if (!response.ok) {
-      // For other errors, log them
       console.error("Failed to fetch subscription", await response.text());
       return null;
     }

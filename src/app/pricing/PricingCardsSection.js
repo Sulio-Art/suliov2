@@ -17,7 +17,6 @@ export default function PricingCardsSection() {
   const [isLoading, setIsLoading] = useState(null);
 
   const handlePayment = async (plan) => {
-    // --- FIX: Handle the 'Free' plan without initiating payment ---
     if (plan.id === "free") {
       toast.info("You are already on the Free plan!");
       if (status === "authenticated") {
@@ -36,7 +35,6 @@ export default function PricingCardsSection() {
     const planPricing = plan.pricing[billingCycle];
 
     try {
-      // --- FIX: Correct API endpoint path ---
       const orderResponse = await fetch(
         `${BACKEND_API_URL}/api/subscriptions/create`,
         {
@@ -99,7 +97,7 @@ export default function PricingCardsSection() {
           theme: { color: "#4F46E5" },
           modal: {
             ondismiss: function () {
-              setIsLoading(null); // Stop loading if user closes the modal
+              setIsLoading(null);
             },
           },
         };
@@ -147,7 +145,6 @@ export default function PricingCardsSection() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {/* Use the plan object directly from the single source of truth */}
         <PricingCard
           plan={planDetails.free}
           price={planDetails.free.pricing[billingCycle].price}

@@ -27,9 +27,9 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  return NextResponse.next(); //TODO when clicked signup redirect to hero page
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|auth).*)"],
 };

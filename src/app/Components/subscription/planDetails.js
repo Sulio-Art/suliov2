@@ -5,7 +5,7 @@ export const featureList = [
   "Storage space",
   "Artwork recommendations",
   "Daily fortune draw game",
-  "Transaction Management", // Standardized name
+  "Transaction Management",
   "Fraud protection",
   "Customizable chat responses",
   "AI-generated buyer recommendations",
@@ -81,7 +81,7 @@ export const planDetails = {
   },
   premium: {
     id: "premium",
-    name: "Premium", // Corrected name from "Prem" for consistency
+    name: "Premium", 
     pricing: {
       monthly: { price: "$16", billing: "$16 billed monthly", amount: 16 },
       yearly: {

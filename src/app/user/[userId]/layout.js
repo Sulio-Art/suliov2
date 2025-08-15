@@ -1,100 +1,91 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useState, createContext, useContext } from "react";
 import { Loader2 } from "lucide-react";
 import Sidebar from "../../Components/User/Sidebar";
-import InstagramConnectModal from "../../Components/auth/instagram/InstagramConnectModal";
-import { FaInstagram } from "react-icons/fa";
+import { useInstagramConnection } from "@/hooks/useInstagramConnection";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "react-hot-toast";
 
-// This is the new component for the overlay
-function ConnectionRequiredOverlay({ onConnectClick }) {
-  return (
-    <div className="absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex flex-col items-center justify-center text-center p-4 z-10">
-      <div className="bg-white p-8 rounded-lg shadow-2xl max-w-md">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          Connect Your Account
-        </h2>
-        <p className="text-gray-600 mb-6">
-          You must connect your Instagram professional account to access this
-          feature.
-        </p>
-        <button
-          onClick={onConnectClick}
-          className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white font-semibold py-3 px-6 rounded-full hover:scale-105 transition-transform duration-300 ease-in-out"
-        >
-          <FaInstagram size={22} />
-          Connect with Instagram
-        </button>
-      </div>
-    </div>
-  );
-}
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
+const ProtectionContext = createContext(null);
+
+export const useProtection = () => {
+  const context = useContext(ProtectionContext);
+  if (!context) {
+    throw new Error("useProtection must be used within a ProtectionProvider");
+  }
+  return context;
+};
 
 export default function UserLayout({ children }) {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
 
-  // We now need two pieces of state:
-  // 1. Should the modal be forced open?
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  // 2. Has the user dismissed the modal at least once?
-  const [modalDismissed, setModalDismissed] = useState(false);
+  const { isConnected: isInstagramConnected, loading: isConnectionLoading } =
+    useInstagramConnection();
+  const { entitlements, isLoading: isSubscriptionLoading } = useSubscription();
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      if (!session.isInstagramConnected) {
-        // If not connected, we always want the modal logic to be active
-        setIsModalOpen(true);
-      } else {
-        // If connected, turn everything off.
-        setIsModalOpen(false);
-        setModalDismissed(false);
-      }
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const isLoading =
+    status === "loading" || isConnectionLoading || isSubscriptionLoading;
+
+
+  let lockReason = null;
+  if (!isLoading) {
+   
+    if (!isInstagramConnected) {
+      lockReason = "instagram";
     }
-  }, [session, status]);
+    
+    else if (entitlements?.isActive === false) {
+      lockReason = "subscription";
+    }
+  }
 
-  // Handler for closing the modal from the "X" button
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setModalDismissed(true);
+  const handleConnectToInstagram = async () => {
+    setIsConnecting(true);
+    try {
+      const response = await fetch(
+        `${BACKEND_API_URL}/api/auth/instagram/auth-url?state=connect`
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Could not get Instagram auth URL");
+      }
+      window.location.href = data.authUrl;
+    } catch (err) {
+      toast.error(err.message || "Failed to start Instagram connection");
+      setIsConnecting(false);
+    }
   };
 
-  // Handler for clicking the "Connect" button on the overlay
-  const handleOverlayConnect = () => {
-    setIsModalOpen(true);
-    setModalDismissed(false);
+  const protectionContextValue = {
+    isLoading,
+    lockReason, 
+    pathname,
+    handleConnectToInstagram,
+    isConnecting,
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto relative">
-        {" "}
-        {/* Added 'relative' for positioning the overlay */}
-        {status === "loading" ? (
-          <div className="flex h-full w-full items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-          </div>
-        ) : status === "authenticated" ? (
-          <>
-            {/* The actual page content is always rendered */}
-            <div className="p-4 sm:p-6 lg:p-8 h-full">{children}</div>
-
-            {/* The blur overlay is shown ONLY if not connected AND the user has dismissed the modal */}
-            {modalDismissed && !session.isInstagramConnected && (
-              <ConnectionRequiredOverlay
-                onConnectClick={handleOverlayConnect}
-              />
-            )}
-
-            {/* The modal is controlled separately */}
-            <InstagramConnectModal
-              open={isModalOpen}
-              onClose={handleModalClose}
-            />
-          </>
-        ) : null}
-      </main>
-    </div>
+    <ProtectionContext.Provider value={protectionContextValue}>
+      <div className="flex h-screen bg-gray-100">
+        <Sidebar isInstagramConnected={isInstagramConnected} />
+        <main className="flex-1 overflow-y-auto relative">
+          {isLoading ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+            </div>
+          ) : (
+            children
+          )}
+        </main>
+      </div>
+    </ProtectionContext.Provider>
   );
 }

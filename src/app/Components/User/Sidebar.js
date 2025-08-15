@@ -1,4 +1,6 @@
+
 "use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -14,10 +16,11 @@ import {
   Layers,
   Calendar,
   User,
+  Lock,
 } from "lucide-react";
 import LogoutButton from "../Reuseable/LogoutButton";
 
-export default function Sidebar() {
+export default function Sidebar({ isInstagramConnected }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const { hasAccess } = useSubscription();
@@ -45,20 +48,22 @@ export default function Sidebar() {
       href: userId ? `/user/${userId}/ai-chatbot` : "#",
     },
     {
-      title: "Subscription",
-      icon: CreditCard,
-      href: userId ? `/user/${userId}/subscription` : "#",
-    },
-    {
       title: "Transaction Management",
       icon: Layers,
       href: userId ? `/user/${userId}/transaction-management` : "#",
-      feature: "Transaction Management",
+      
+      feature: "transactionManagement",
     },
     {
       title: "Event Management",
       icon: Calendar,
       href: userId ? `/user/${userId}/event-management` : "#",
+    },
+    {
+      title: "Subscription",
+      icon: CreditCard,
+      href: userId ? `/user/${userId}/subscription` : "#",
+      isExempt: true,
     },
   ];
 
@@ -80,9 +85,13 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      <nav className="px-4 space-y-2">
+      <nav className="flex-grow px-4 space-y-2">
         {mainItems.map((item) => {
           const isActive = item.href !== "#" && pathname.startsWith(item.href);
+
+         
+          const isLocked = !isInstagramConnected && !item.isExempt;
+
           return (
             <Link
               key={item.title}
@@ -101,12 +110,13 @@ export default function Sidebar() {
                 )}
               />
               <span>{item.title}</span>
+              {isLocked && <Lock className="h-4 w-4 ml-auto text-gray-400" />}
             </Link>
           );
         })}
-       
+
         <Link
-          href={userId ? `/user/${userId}/profile` : "#"} 
+          href={userId ? `/user/${userId}/profile` : "#"}
           className={cn(
             "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all",
             pathname.includes("/profile")

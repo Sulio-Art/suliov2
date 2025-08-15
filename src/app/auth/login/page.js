@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { useState, Suspense } from "react";
@@ -57,8 +59,6 @@ function LoginPageContent() {
   const [otp, setOtp] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
 
   const [resetPassword, setResetPassword] = useState("");
   const [resetConfirm, setResetConfirm] = useState("");
@@ -86,12 +86,14 @@ function LoginPageContent() {
   const {
     handleSubmit: handleResetSubmit,
     formState: { errors: resetErrors },
+    watch: watchReset,
   } = useForm({
     resolver: zodResolver(resetSchema),
     defaultValues: { newPassword: "", confirmPassword: "" },
-    values: { newPassword: resetPassword, confirmPassword: resetConfirm },
     mode: "onChange",
   });
+
+  const newPasswordValue = watchReset("newPassword");
 
   const onLogin = async (data) => {
     setIsSubmitting(true);
@@ -104,8 +106,7 @@ function LoginPageContent() {
     if (result?.error) {
       toast.error("Login failed. Please check your credentials.");
     } else if (result?.ok) {
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
     }
   };
 
@@ -125,7 +126,6 @@ function LoginPageContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       toast.success("OTP sent! Check your email.");
-      setOtpSent(true);
       setMode("reset-otp");
     } catch (err) {
       setResetError(err.message);
@@ -134,12 +134,12 @@ function LoginPageContent() {
     setResetLoading(false);
   };
 
+
   const onVerifyOtp = async (data) => {
     setResetLoading(true);
     setResetError("");
-    setOtp(data.otp); // Store OTP for the final password reset step
     try {
-      // --- SECURITY FIX: Call backend to verify OTP before proceeding ---
+      
       const res = await fetch(
         `${BACKEND_API_URL}/api/auth/verify-password-reset-otp`,
         {
@@ -151,9 +151,9 @@ function LoginPageContent() {
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || "Invalid OTP");
 
-      // Only proceed if OTP is valid
+      
+      setOtp(data.otp); 
       setMode("reset-password");
-      setOtpVerified(true);
       toast.success("OTP verified! You can now set your new password.");
     } catch (err) {
       setResetError(err.message);
@@ -162,8 +162,7 @@ function LoginPageContent() {
     setResetLoading(false);
   };
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
+  const onResetPassword = async (data) => {
     setResetLoading(true);
     setResetError("");
     try {
@@ -172,20 +171,16 @@ function LoginPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: resetEmail,
-          otp, // Use the verified OTP
-          newPassword: resetPassword,
+          otp, 
+          newPassword: data.newPassword,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
       toast.success("Password reset successfully! You can now log in.");
       setMode("login");
-      setOtpSent(false);
-      setOtpVerified(false);
       setResetEmail("");
       setOtp("");
-      setResetPassword("");
-      setResetConfirm("");
     } catch (err) {
       setResetError(err.message);
       toast.error(err.message);
@@ -321,9 +316,9 @@ function LoginPageContent() {
               <p className="text-red-500 text-sm mt-1">{resetError}</p>
             )}
             <Button type="submit" className="w-full" disabled={resetLoading}>
-              {resetLoading ? (
+              {resetLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
+              )}
               {resetLoading ? "Sending OTP..." : "Send OTP"}
             </Button>
             <div className="text-center mt-2">
@@ -381,101 +376,79 @@ function LoginPageContent() {
           <p className="text-gray-600">Create your new password</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleResetPassword} className="space-y-4">
+          <form
+            onSubmit={handleResetSubmit(onResetPassword)}
+            className="space-y-4"
+          >
             <div>
               <Label htmlFor="newPassword">New Password</Label>
-              <div className="relative">
-                <Input
-                  id="newPassword"
-                  type={showResetPassword ? "text" : "password"}
-                  value={resetPassword}
-                  onChange={(e) => setResetPassword(e.target.value)}
-                  autoComplete="new-password"
-                  className="pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  aria-label={
-                    showResetPassword ? "Hide password" : "Show password"
-                  }
-                  onClick={() => setShowResetPassword((show) => !show)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                >
-                  {showResetPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-              <PasswordStrengthIndicator password={resetPassword} />
+              <Controller
+                name="newPassword"
+                control={otpControl}
+                render={({ field }) => (
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showResetPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      className="pr-10"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={() => setShowResetPassword((s) => !s)}
+                      className="absolute top-1/2 right-3 -translate-y-1/2"
+                    >
+                      {showResetPassword ? <EyeOff /> : <Eye />}
+                    </button>
+                  </div>
+                )}
+              />
+              <PasswordStrengthIndicator password={newPasswordValue} />
+              {resetErrors.newPassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {resetErrors.newPassword.message}
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showResetConfirm ? "text" : "password"}
-                  value={resetConfirm}
-                  onChange={(e) => setResetConfirm(e.target.value)}
-                  autoComplete="new-password"
-                  className="pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  aria-label={
-                    showResetConfirm ? "Hide password" : "Show password"
-                  }
-                  onClick={() => setShowResetConfirm((show) => !show)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                >
-                  {showResetConfirm ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-              {resetConfirm && resetPassword !== resetConfirm && (
-                <div className="text-red-500 text-sm mt-1">
-                  Passwords do not match.
-                </div>
+              <Controller
+                name="confirmPassword"
+                control={otpControl}
+                render={({ field }) => (
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showResetConfirm ? "text" : "password"}
+                      autoComplete="new-password"
+                      className="pr-10"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={() => setShowResetConfirm((s) => !s)}
+                      className="absolute top-1/2 right-3 -translate-y-1/2"
+                    >
+                      {showResetConfirm ? <EyeOff /> : <Eye />}
+                    </button>
+                  </div>
+                )}
+              />
+              {resetErrors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {resetErrors.confirmPassword.message}
+                </p>
               )}
             </div>
-            {(resetErrors.newPassword || resetErrors.confirmPassword) && (
-              <div className="text-red-500 text-sm mt-1">
-                {resetErrors.newPassword?.message ||
-                  resetErrors.confirmPassword?.message}
-              </div>
-            )}
-            <Button
-              disabled={
-                resetLoading ||
-                !resetPassword ||
-                !resetConfirm ||
-                resetPassword !== resetConfirm
-              }
-              type="submit"
-              className="w-full"
-            >
-              {resetLoading ? (
+            <Button disabled={resetLoading} type="submit" className="w-full">
+              {resetLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
+              )}
               Reset Password
             </Button>
-            <div className="text-center mt-2">
-              <button
-                type="button"
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
-                onClick={() => setMode("login")}
-              >
-                Back to Login
-              </button>
-            </div>
           </form>
         </CardContent>
       </Card>
@@ -503,3 +476,4 @@ export default function LoginPage() {
     </>
   );
 }
+//TODO check reset password 

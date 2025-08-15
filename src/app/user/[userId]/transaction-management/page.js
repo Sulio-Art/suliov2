@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import ClientWrapper from "./client-wrapper";
+import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -54,13 +55,15 @@ export default async function TransactionManagementPage({ searchParams }) {
   const initialTotalPages = result.data?.totalPages || 1;
 
   return (
-    <ClientWrapper
-      isForbidden={isForbidden}
-      initialTransactions={initialTransactions}
-      initialTotalPages={initialTotalPages}
-      initialPage={page}
-      initialSearch={search}
-      initialStatus={status}
-    />
+    <ClientSideWrapper>
+      <ClientWrapper
+        isForbidden={isForbidden}
+        initialTransactions={initialTransactions}
+        initialTotalPages={initialTotalPages}
+        initialPage={page}
+        initialSearch={search}
+        initialStatus={status}
+      />
+    </ClientSideWrapper>
   );
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { FaInstagram } from "react-icons/fa";
+import { toast } from "react-hot-toast";
 import { Input } from "../../ui/input";
 import { Card, CardContent } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -22,93 +23,52 @@ export default function Hero() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-
   const [emailExists, setEmailExists] = useState(false);
-  const [emailCheckLoading, setEmailCheckLoading] = useState(false);
 
-  const checkEmailInDb = async (email) => {
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      setEmailExists(false);
-      return;
-    }
-    setEmailCheckLoading(true);
-    try {
-      const res = await fetch(`${BACKEND_API_URL}/api/auth/check-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      setEmailExists(data.exists);
-    } catch {
-      setEmailExists(false);
-    } finally {
-      setEmailCheckLoading(false);
-    }
-  };
-
-  const instagramLoginUrl = new URL(
-    "https://www.instagram.com/oauth/authorize"
-  );
-  instagramLoginUrl.searchParams.set(
-    "client_id",
-    process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID
-  );
-  instagramLoginUrl.searchParams.set(
-    "redirect_uri",
-    `${process.env.NEXT_PUBLIC_APP_URL}/auth/instagram/callback`
-  );
-  instagramLoginUrl.searchParams.set("response_type", "code");
-  instagramLoginUrl.searchParams.set("state", "login");
-  instagramLoginUrl.searchParams.set(
-    "scope",
-    "instagram_business_basic,instagram_business_content_publish"
-  );
-
-  const handleConnect = () => {
+  const handleInstagramAuth = async (state) => {
     setIsConnecting(true);
-    const instagramConnectUrl = new URL(
-      "https://www.instagram.com/oauth/authorize"
-    );
-    instagramConnectUrl.searchParams.set(
-      "client_id",
-      process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID
-    );
-    instagramConnectUrl.searchParams.set(
-      "redirect_uri",
-      `${process.env.NEXT_PUBLIC_APP_URL}/auth/instagram/callback`
-    );
-    instagramConnectUrl.searchParams.set("response_type", "code");
-    instagramConnectUrl.searchParams.set("state", "connect");
-    instagramConnectUrl.searchParams.set(
-      "scope",
-      "instagram_business_basic,instagram_business_content_publish"
-    );
-    window.location.href = instagramConnectUrl.toString();
+    try {
+      const response = await fetch(
+        `${BACKEND_API_URL}/api/auth/instagram/auth-url?state=${state}`
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Could not get Instagram auth URL.");
+      }
+      window.location.href = data.authUrl;
+    } catch (err) {
+      toast.error(err.message);
+      setIsConnecting(false);
+    }
   };
 
   const handleSendOtp = async () => {
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("Please enter a valid email address.");
       return;
     }
-    await checkEmailInDb(email);
-    if (emailExists) {
-      return;
-    }
+    setEmailExists(false);
     setIsSubmitting(true);
     try {
-      const response = await fetch(
-        `${BACKEND_API_URL}/api/auth/send-verification-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const response = await fetch(`${BACKEND_API_URL}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to send OTP.");
+      if (!response.ok) {
+        const error = new Error(data.message || "Failed to send OTP.");
+        error.status = response.status;
+        throw error;
+      }
+      toast.success(data.message || "OTP sent successfully!");
       setShowOtpInput(true);
     } catch (err) {
+      if (err.status === 409) {
+        setEmailExists(true);
+      } else {
+        toast.error(err.message || "An unexpected error occurred.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -116,6 +76,7 @@ export default function Hero() {
 
   const handleVerifyOtpAndRegister = async () => {
     if (otp.length !== 6) {
+      toast.error("Please enter a 6-digit OTP.");
       return;
     }
     setIsSubmitting(true);
@@ -131,9 +92,18 @@ export default function Hero() {
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "OTP verification failed.");
-      sessionStorage.setItem("verifiedEmail", email);
-      router.push("/auth/register");
+
+      if (data.registrationToken) {
+        const params = new URLSearchParams({
+          regToken: data.registrationToken,
+          email: email,
+        });
+        router.push(`/auth/register?${params.toString()}`);
+      } else {
+        toast.error("Could not create registration session. Please try again.");
+      }
     } catch (err) {
+      toast.error(err.message || "Invalid or expired OTP.");
     } finally {
       setIsSubmitting(false);
     }
@@ -148,6 +118,7 @@ export default function Hero() {
     }
   };
 
+
   const renderGuestForm = () => (
     <form onSubmit={handleSubmit}>
       <CardContent className="space-y-4 p-6">
@@ -161,7 +132,6 @@ export default function Hero() {
               setEmail(e.target.value);
               setEmailExists(false);
             }}
-            onBlur={() => checkEmailInDb(email)}
             readOnly={showOtpInput}
             className="pl-12 pr-4 py-6 rounded-full bg-gray-100 placeholder:text-gray-500"
           />
@@ -205,13 +175,19 @@ export default function Hero() {
           <span className="px-2 text-sm text-gray-400">Or</span>
           <hr className="w-full border-gray-200" />
         </div>
-        <Link
-          href={instagramLoginUrl.toString()}
+        <Button
+          type="button"
+          onClick={() => handleInstagramAuth("login")}
+          disabled={isConnecting}
           className="w-full hover:scale-105 transition-transform duration-300 ease-in-out bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-4 h-auto text-base font-semibold flex gap-3 items-center justify-center"
         >
-          <FaInstagram className="" size={22} />
+          {isConnecting ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <FaInstagram size={22} />
+          )}
           Login with Instagram
-        </Link>
+        </Button>
       </CardContent>
     </form>
   );
@@ -222,7 +198,7 @@ export default function Hero() {
         You're all set, {session.user?.name}!
       </h3>
       <p className="text-gray-600">Ready to continue creating?</p>
-      <Link href="/dashboard">
+      <Link href={`/user/${session.user.id}/dashboard`}>
         <Button className="w-full bg-[#ff8c43] hover:bg-[#ff8c43]/90 text-white rounded-full py-4 h-auto text-base font-semibold">
           GO TO DASHBOARD
         </Button>
@@ -234,7 +210,7 @@ export default function Hero() {
         </div>
       ) : (
         <Button
-          onClick={handleConnect}
+          onClick={() => handleInstagramAuth("connect")}
           disabled={isConnecting}
           className="w-full hover:scale-105 transition-transform duration-300 ease-in-out bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-4 h-auto text-base font-semibold flex gap-3 items-center justify-center"
         >
@@ -250,15 +226,15 @@ export default function Hero() {
   );
 
   const renderLoadingSkeleton = () => (
-    <CardContent className="flex items-center justify-center h-[264px]">
+    <CardContent className="flex items-center justify-center h-[348px]">
       <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
     </CardContent>
   );
 
   return (
-    <div className="min-h-screen md:px-2 snap-y snap-mandatory flex justify-evenly items-start">
-      <div className="gap-16 flex flex-col lg:flex-row justify-around items-center">
-        <div className="flex flex-col justify-start">
+    <div className="min-h-screen md:px-2 snap-y snap-mandatory flex justify-center items-center">
+      <div className="gap-16 flex flex-col lg:flex-row justify-around items-center w-full max-w-6xl">
+        <div className="flex flex-col justify-start w-full lg:w-1/2">
           <div className="text-left px-4">
             <h1 className="text-4xl md:text-5xl font-bold">
               Artists Using AI Assistants Have Increased Engagement by 85%.
@@ -275,6 +251,7 @@ export default function Hero() {
                 priority
                 className="object-cover"
                 quality={100}
+                unoptimized
               />
             </div>
           </div>

@@ -1,5 +1,10 @@
 import ClientWrapper from "./client-wrapper";
+import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
 
 export default function AiChatbotPage() {
-  return <ClientWrapper />;
+  return (
+    <ClientSideWrapper>
+      <ClientWrapper />;
+    </ClientSideWrapper>
+  );
 }

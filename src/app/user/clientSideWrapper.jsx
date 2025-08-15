@@ -13,13 +13,11 @@ export const authOptions = {
       },
       async authorize(credentials, req) {
         try {
-          // --- SCENARIO 1: Token-based sign-in (after registration, IG connect, etc.) ---
-          // This is now the most important flow for session refreshes.
+          
           if (credentials?.token) {
             console.log("--- [NEXTAUTH] Detected Token-based Sign-In flow.");
 
-            // --- CRITICAL FIX: Use the token to fetch the FULL user object from the backend ---
-            // This ensures we get the most up-to-date data, including the instagramUserId.
+           
             const res = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
               headers: {
                 Authorization: `Bearer ${credentials.token}`,
@@ -33,15 +31,13 @@ export const authOptions = {
               );
             }
 
-            // Return the full user object from the backend, and include the token
-            // so it can be passed to the JWT callback.
+            
             return {
-              ...data.user, // The user object from /api/auth/me
+              ...data.user, 
               backendToken: credentials.token,
             };
           }
 
-          // --- SCENARIO 2: Standard Email/Password Login ---
           if (credentials?.email && credentials?.password) {
             console.log("--- [NEXTAUTH] Detected Email/Password flow.");
             const res = await fetch(`${BACKEND_API_URL}/api/auth/login`, {
@@ -87,12 +83,11 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      // The 'user' object is what is returned from the 'authorize' function.
       if (user) {
-        token.id = user._id || user.id; // Handle both _id and id for consistency
+        token.id = user._id || user.id; 
         token.role = user.role;
         token.backendToken = user.backendToken;
-        token.instagramUserId = user.instagramUserId; // <-- This will now be correctly populated
+        token.instagramUserId = user.instagramUserId;
         token.subscriptionStatus = user.subscriptionStatus;
         token.email = user.email;
       }
@@ -104,8 +99,7 @@ export const authOptions = {
         session.user.role = token.role;
         session.user.email = token.email;
         session.backendToken = token.backendToken;
-        // --- THIS IS THE KEY ---
-        // It now correctly reflects the latest DB state because the JWT token is built correctly.
+     
         session.isInstagramConnected = !!token.instagramUserId;
         session.subscriptionStatus = token.subscriptionStatus;
       }

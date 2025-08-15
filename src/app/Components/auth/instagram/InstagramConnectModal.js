@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 import {
   Dialog,
   DialogOverlay,
@@ -27,49 +27,23 @@ const CustomDialogContent = ({ className, children, ...props }) => (
       {...props}
     >
       {children}
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>
 );
 
-export default function InstagramConnectModal({ open }) {
-  const [isConnecting, setIsConnecting] = useState(false);
-
-  const handleConnect = () => {
-    setIsConnecting(true);
-    const instagramConnectUrl = new URL(
-      "https://www.instagram.com/oauth/authorize"
-    );
-
-    const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID;
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/auth/instagram/callback`;
-
-    if (!clientId || !process.env.NEXT_PUBLIC_APP_URL) {
-      console.error(
-        "CRITICAL ERROR: Frontend environment variables for Instagram are not loaded."
-      );
-      alert("Configuration error. Please contact support.");
-      setIsConnecting(false);
-      return;
-    }
-
-    instagramConnectUrl.searchParams.set("client_id", clientId);
-    instagramConnectUrl.searchParams.set("redirect_uri", redirectUri);
-    instagramConnectUrl.searchParams.set("response_type", "code");
-    instagramConnectUrl.searchParams.set("state", "connect");
-    instagramConnectUrl.searchParams.set(
-      "scope",
-      "instagram_business_basic,instagram_business_content_publish"
-    );
-
-    window.location.href = instagramConnectUrl.toString();
-  };
-
+export default function InstagramConnectModal({
+  open,
+  onClose,
+  onConnect,
+  isConnecting,
+}) {
   return (
-    <Dialog open={open}>
-      <CustomDialogContent
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <CustomDialogContent>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
             One Last Step!
@@ -81,8 +55,8 @@ export default function InstagramConnectModal({ open }) {
         </DialogHeader>
         <DialogFooter className="pt-4">
           <Button
-            onClick={handleConnect}
-            disabled={isConnecting}
+            onClick={onConnect} 
+            disabled={isConnecting} 
             className="w-full hover:scale-105 transition-transform duration-300 ease-in-out bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-4 h-auto text-base font-semibold flex gap-3 items-center justify-center"
           >
             {isConnecting ? (

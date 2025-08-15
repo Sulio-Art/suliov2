@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,8 +10,7 @@ import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import { Card } from "../../Components/ui/card";
 import StandardRegistrationForm from "../../Components/auth/register/StandardRegistrationForm";
-import InstagramRegistrationForm from "../../Components/auth/register/InstagramRegistrationForm";
-import OtpForm from "../../Components/auth/register/OtpForm";
+import { Loader2 } from "lucide-react";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -21,6 +20,7 @@ const passwordValidation = z
   .regex(/[A-Z]/, "Must contain an uppercase letter")
   .regex(/[0-9]/, "Must contain a number")
   .regex(/[\W_]/, "Must contain a special character");
+
 const baseSchema = z
   .object({
     firstName: z.string().min(1, "First name is required"),
@@ -33,20 +33,18 @@ const baseSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
-const otpSchema = z.object({
-  otp: z.string().length(6, "OTP must be 6 digits"),
-});
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
-  const [isInstagramFlow, setIsInstagramFlow] = useState(false);
+  const searchParams = useSearchParams();
+
+  const [flowType, setFlowType] = useState(null); 
+
   const [completionToken, setCompletionToken] = useState(null);
+
+  const [registrationToken, setRegistrationToken] = useState(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showOtpForm, setShowOtpForm] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const [formStep, setFormStep] = useState("DETAILS");
-  const [isOtpLoading, setIsOtpLoading] = useState(false);
-  const [otp, setOtp] = useState("");
   const [userExistsError, setUserExistsError] = useState(false);
 
   const {
@@ -55,7 +53,6 @@ export default function RegisterPage() {
     setValue,
     watch,
     formState: { errors },
-    getValues,
   } = useForm({
     resolver: zodResolver(baseSchema),
     defaultValues: {
@@ -68,88 +65,84 @@ export default function RegisterPage() {
   });
   const passwordValue = watch("password");
 
-  const {
-    handleSubmit: handleStandardOtpSubmit,
-    control: standardOtpControl,
-    formState: { errors: standardOtpErrors },
-  } = useForm({ resolver: zodResolver(otpSchema), defaultValues: { otp: "" } });
-
   useEffect(() => {
-    const token = sessionStorage.getItem("igCompletionToken");
-    const prefillDataStr = sessionStorage.getItem("igPrefillData");
-    if (token && prefillDataStr) {
-      setIsInstagramFlow(true);
-      setCompletionToken(token);
-      const prefillData = JSON.parse(prefillDataStr);
-      setValue("firstName", prefillData.firstName || "");
-      setValue("lastName", prefillData.lastName || "");
-      sessionStorage.removeItem("igCompletionToken");
-      sessionStorage.removeItem("igPrefillData");
-    }
-  }, [setValue]);
+    const regTokenFromUrl = searchParams.get("regToken");
+    const emailFromUrl = searchParams.get("email");
 
-  // --- CRITICAL FIX 1: Update the autoLogin function to accept and use the userId ---
-  const autoLogin = async (token, email, userId, status) => {
-    const loginResult = await signIn("credentials", {
-      token,
-      email,
-      userId, // <-- ADD THIS LINE to pass userId to NextAuth
+    if (regTokenFromUrl && emailFromUrl) {
+      setRegistrationToken(regTokenFromUrl);
+      setValue("email", emailFromUrl);
+      setFlowType("standard");
+      return;
+    }
+
+    
+    const igTokenFromStorage = sessionStorage.getItem("igCompletionToken");
+    const igPrefillFromStorage = sessionStorage.getItem("igPrefillData");
+
+    if (igTokenFromStorage) {
+      setCompletionToken(igTokenFromStorage);
+      if (igPrefillFromStorage) {
+        const prefill = JSON.parse(igPrefillFromStorage);
+        setValue("firstName", prefill.firstName || "");
+        setValue("lastName", prefill.lastName || "");
+      }
+      setFlowType("instagram");
+    } else {
+      setFlowType("none");
+    }
+  }, [searchParams, setValue]);
+
+  const autoLogin = async (backendToken) => {
+    const result = await signIn("credentials", {
+      token: backendToken,
       redirect: false,
     });
-    if (loginResult?.error) {
+    if (result?.error) {
       toast.error("Auto-login failed. Please log in manually.");
       router.push("/auth/login");
     } else {
-      // --- CRITICAL FIX 2: Construct the correct dashboard URL with the userId and refresh ---
-      router.push(`/user/${userId}/dashboard?status=${status}`);
-      router.refresh(); // Ensure session state is updated everywhere
+      window.location.href = "/";
     }
   };
 
-  const handleCompleteInstagramRegistration = async (data) => {
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(
-        `${BACKEND_API_URL}/api/auth/instagram/complete-registration`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...data, completionToken }),
-        }
-      );
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.message || "Registration failed.");
-      // --- CRITICAL FIX 3: Pass the userId from the API response to autoLogin ---
-      await autoLogin(
-        result.token,
-        data.email,
-        result.user._id,
-        "registration_complete"
-      );
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleStandardRegistration = async (data) => {
+  const handleFinalizeRegistration = async (data) => {
     setIsSubmitting(true);
     setUserExistsError(false);
+
+    let apiUrl;
+    let payload;
+
+    if (flowType === "standard") {
+      apiUrl = `${BACKEND_API_URL}/api/auth/register/finalize`;
+      payload = { ...data, registrationToken };
+    } else if (flowType === "instagram") {
+      apiUrl = `${BACKEND_API_URL}/api/auth/instagram/complete-registration`;
+      payload = { ...data, completionToken };
+    } else {
+      toast.error("Invalid registration flow.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // This now points to the backend route that creates an unverified user and sends an OTP
-      const response = await fetch(`${BACKEND_API_URL}/api/auth/register`, {
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
-      if (!response.ok)
+      if (!response.ok) {
         throw new Error(result.message || "Registration failed.");
-      setRegisteredEmail(data.email);
-      setShowOtpForm(true); // Proceed to OTP form
-      toast.success(result.message);
+      }
+
+      if (flowType === "instagram") {
+        sessionStorage.removeItem("igCompletionToken");
+        sessionStorage.removeItem("igPrefillData");
+      }
+
+      toast.success(result.message || "Registration successful!");
+      await autoLogin(result.token);
     } catch (err) {
       if (err.message.includes("already exists")) {
         setUserExistsError(true);
@@ -161,167 +154,55 @@ export default function RegisterPage() {
     }
   };
 
-  const onStandardOtpSubmit = async (data) => {
-    setIsSubmitting(true);
-    try {
-      // This now points to the dedicated OTP verification route
-      const response = await fetch(`${BACKEND_API_URL}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: registeredEmail, otp: data.otp }),
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.message || "OTP verification failed.");
-      // --- CRITICAL FIX 4: Pass the userId from the API response to autoLogin ---
-      await autoLogin(
-        result.token,
-        registeredEmail,
-        result.user._id,
-        "registration_complete"
-      );
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSendInstagramOtp = async () => {
-    const email = getValues("email");
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
-    setIsOtpLoading(true);
-    setUserExistsError(false);
-    try {
-      const response = await fetch(
-        `${BACKEND_API_URL}/api/auth/instagram/send-instagram-email-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, completionToken }),
-        }
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-      toast.success(data.message);
-      setFormStep("OTP_VERIFICATION");
-    } catch (err) {
-      if (err.message.includes("already exists")) {
-        setUserExistsError(true);
-      } else {
-        toast.error(err.message);
-      }
-    } finally {
-      setIsOtpLoading(false);
-    }
-  };
-
-  const handleVerifyInstagramOtp = async () => {
-    if (otp.length !== 6) {
-      toast.error("Please enter a 6-digit OTP.");
-      return;
-    }
-    setIsOtpLoading(true);
-    try {
-      const email = getValues("email");
-      const response = await fetch(
-        `${BACKEND_API_URL}/api/auth/instagram/verify-instagram-email-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, otp }),
-        }
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-      toast.success(data.message);
-      setFormStep("PASSWORD_SETUP");
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setIsOtpLoading(false);
-    }
-  };
-
-  const renderMainForm = () => {
-    if (isInstagramFlow) {
-      return (
-        <form
-          onSubmit={handleSubmit(handleCompleteInstagramRegistration)}
-          className="space-y-4"
-          noValidate
-        >
-          <InstagramRegistrationForm
-            control={control}
-            errors={errors}
-            formStep={formStep}
-            userExistsError={userExistsError}
-            passwordValue={passwordValue}
-            onSendOtp={handleSendInstagramOtp}
-            onVerifyOtp={handleVerifyInstagramOtp}
-            isOtpLoading={isOtpLoading}
-            onOtpChange={(e) => setOtp(e.target.value)}
-            otpValue={otp}
-            isSubmitting={isSubmitting}
-          />
-        </form>
-      );
-    }
-    if (showOtpForm) {
-      return (
-        <form
-          onSubmit={handleStandardOtpSubmit(onStandardOtpSubmit)}
-          className="space-y-4"
-          noValidate
-        >
-          <OtpForm
-            control={standardOtpControl}
-            errors={standardOtpErrors}
-            isSubmitting={isSubmitting}
-          />
-        </form>
-      );
-    }
+  if (flowType === null) {
     return (
-      <form
-        onSubmit={handleSubmit(handleStandardRegistration)}
-        className="space-y-4"
-        noValidate
-      >
-        <StandardRegistrationForm
-          control={control}
-          errors={errors}
-          isSubmitting={isSubmitting}
-          userExistsError={userExistsError}
-          passwordValue={passwordValue}
-        />
-      </form>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     );
-  };
+  }
+
+  if (flowType === "none") {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-4">Invalid Registration Link</h1>
+          <p>Please start the registration process from the homepage.</p>
+          <Link href="/" className="text-blue-600 underline mt-4 inline-block">
+            Go to Homepage
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold">
-            {showOtpForm
-              ? "Verify Your Account"
-              : isInstagramFlow
-                ? "Complete Your Profile"
-                : "Create an Account"}
-          </h1>
+          <h1 className="text-2xl font-bold">Complete Your Profile</h1>
           <p className="text-gray-600">
-            {showOtpForm
-              ? `We've sent a code to ${registeredEmail}`
-              : isInstagramFlow
-                ? "Your Instagram is connected! Just confirm your email and set a password to finish creating your account."
-                : "Get started with your new account"}
+            {flowType === "instagram"
+              ? "Your Instagram is connected! Just set a password to finish."
+              : "Your email is verified! Just set your name and password."}
           </p>
         </div>
-        {renderMainForm()}
+
+        <form
+          onSubmit={handleSubmit(handleFinalizeRegistration)}
+          className="space-y-4"
+          noValidate
+        >
+          <StandardRegistrationForm
+            control={control}
+            errors={errors}
+            isSubmitting={isSubmitting}
+            userExistsError={userExistsError}
+            passwordValue={passwordValue}
+            isEmailVerified={flowType === "standard"} 
+          />
+        </form>
+
         <div className="mt-6 text-center">
           <p className="text-sm">
             Already have an account?{" "}
@@ -335,5 +216,19 @@ export default function RegisterPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }

@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { Button } from "../../Components/ui/button";
 import { Input } from "../../Components/ui/input";
 import Link from "next/link";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const FormInput = ({ label, children }) => (
   <div>
@@ -77,6 +78,13 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
   const { data: storageStats, isLoading: isLoadingStats } =
     useGetStorageStatsQuery(userId, { skip: !userId });
 
+  const {
+    status: subscriptionStatus,
+    entitlements,
+    isLoading: isLoadingSubscription,
+    daysRemaining,
+  } = useSubscription();
+
   useEffect(() => {
     if (isEditMode && initialData) {
       setTitle(initialData.title || "");
@@ -94,6 +102,17 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
   const handleFiles = (files) => {
     const newFiles = Array.from(files);
     if (newFiles.length === 0) return;
+
+    if (entitlements?.artworkMaxSizeMB) {
+      const maxBytes = entitlements.artworkMaxSizeMB * 1024 * 1024;
+      const overSized = newFiles.find((f) => f.size > maxBytes);
+      if (overSized) {
+        toast.error(
+          `File "${overSized.name}" exceeds your plan limit of ${entitlements.artworkMaxSizeMB} MB`
+        );
+        return;
+      }
+    }
 
     if (isEditMode) {
       setImagePreviews([]);
@@ -124,6 +143,22 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (subscriptionStatus === "expired") {
+      toast.error("Your subscription has expired. Please upgrade to continue.");
+      return;
+    }
+
+    if (
+      storageStats &&
+      storageStats.storageLimit &&
+      storageStats.currentUsage >= storageStats.storageLimit
+    ) {
+      toast.error(
+        "You have reached your storage limit. Upgrade to upload more."
+      );
+      return;
+    }
 
     const formData = new FormData();
     formData.append("title", title);
@@ -157,6 +192,20 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
         toast.error("Please select at least one image to upload.");
         return;
       }
+
+      if (storageStats?.storageLimit) {
+        const totalNewBytes = selectedFiles.reduce((sum, f) => sum + f.size, 0);
+        if (
+          storageStats.currentUsage + totalNewBytes >
+          storageStats.storageLimit
+        ) {
+          toast.error(
+            "Uploading these files would exceed your storage limit. Remove some files or upgrade."
+          );
+          return;
+        }
+      }
+
       selectedFiles.forEach((file) => formData.append("artworkImages", file));
 
       toast
@@ -169,7 +218,31 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
     }
   };
 
-  const isLoading = isCreating || isUpdating;
+  const isLoading = isCreating || isUpdating || isLoadingSubscription;
+
+  if (subscriptionStatus === "expired") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-xl text-center">
+          <h2 className="text-2xl font-bold mb-4">Your trial has ended</h2>
+          <p className="text-gray-600 mb-6">
+            Your 90-day free trial has expired. Upgrade to continue uploading
+            and using services.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link href="/pricing">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                Upgrade Plan
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Refresh
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -179,6 +252,16 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
               {isEditMode ? "Edit Artwork" : "Upload Artwork"}
             </h1>
+            {entitlements && (
+              <div className="text-sm text-gray-600">
+                Plan:{" "}
+                <span className="font-semibold">
+                  {entitlements.effectivePlan}
+                </span>
+                {" • "}Max file: {entitlements.artworkMaxSizeMB} MB
+                {" • "}Days left: {daysRemaining ?? "—"}
+              </div>
+            )}
           </div>
           <button
             type="button"
@@ -316,7 +399,6 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
               <option value="sculpture">Sculpture</option>
               <option value="digital">Digital Art</option>
               <option value="oil-painting">Oil Painting</option>
-              {/* ... other options */}
             </select>
           </FormInput>
 
@@ -344,7 +426,11 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
             <Button
               type="submit"
               className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-              disabled={isLoading}
+              disabled={
+                isLoading ||
+                (storageStats?.storageLimit &&
+                  storageStats.currentUsage >= storageStats.storageLimit)
+              }
             >
               {isLoading ? (
                 <Loader2 className="w-6 h-6 animate-spin" />

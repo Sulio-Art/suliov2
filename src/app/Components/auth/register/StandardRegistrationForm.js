@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useRef } from "react";
 import { Controller } from "react-hook-form";
 import Link from "next/link";
 import { Button } from "../../../Components/ui/button";
@@ -8,6 +7,7 @@ import { Input } from "../../../Components/ui/input";
 import { Label } from "../../../Components/ui/label";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import PasswordStrengthIndicator from "./PasswordStrengthIndicator";
+import { useState } from "react";
 
 export default function StandardRegistrationForm({
   control,
@@ -15,14 +15,13 @@ export default function StandardRegistrationForm({
   isSubmitting,
   userExistsError,
   passwordValue,
+  isEmailVerified, 
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const passwordWrapperRef = useRef(null);
-  const confirmPasswordWrapperRef = useRef(null);
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="firstName">First Name</Label>
@@ -62,15 +61,22 @@ export default function StandardRegistrationForm({
               type="email"
               placeholder="you@example.com"
               {...field}
+              readOnly={isEmailVerified} 
+              className={
+                isEmailVerified ? "bg-gray-100 cursor-not-allowed" : ""
+              }
             />
           )}
         />
         {errors.email && (
           <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
         )}
+        {isEmailVerified && (
+          <p className="text-sm text-green-600 mt-1">✓ Email verified.</p>
+        )}
         {userExistsError && (
           <div className="bg-blue-50 border border-blue-200 rounded px-2 py-1 mt-2 text-blue-700 text-sm flex items-center gap-1">
-            <span>🚩 You already have an account.</span>
+            <span>🚩 This email is already in use.</span>
             <Link
               href="/auth/login"
               className="font-semibold underline hover:text-blue-800"
@@ -82,7 +88,7 @@ export default function StandardRegistrationForm({
       </div>
       <div>
         <Label htmlFor="password">Password</Label>
-        <div className="relative" ref={passwordWrapperRef}>
+        <div className="relative">
           <Controller
             name="password"
             control={control}
@@ -97,15 +103,10 @@ export default function StandardRegistrationForm({
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            onMouseDown={(e) => e.preventDefault()}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute top-1/2 right-3 -translate-y-1/2"
           >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
+            {showPassword ? <EyeOff /> : <Eye />}
           </button>
         </div>
         {errors.password && (
@@ -115,7 +116,7 @@ export default function StandardRegistrationForm({
       </div>
       <div>
         <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <div className="relative" ref={confirmPasswordWrapperRef}>
+        <div className="relative">
           <Controller
             name="confirmPassword"
             control={control}
@@ -130,15 +131,10 @@ export default function StandardRegistrationForm({
           />
           <button
             type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            onMouseDown={(e) => e.preventDefault()}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+            onClick={() => setShowConfirmPassword((s) => !s)}
+            className="absolute top-1/2 right-3 -translate-y-1/2"
           >
-            {showConfirmPassword ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
+            {showConfirmPassword ? <EyeOff /> : <Eye />}
           </button>
         </div>
         {errors.confirmPassword && (
@@ -151,6 +147,6 @@ export default function StandardRegistrationForm({
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Create Account
       </Button>
-    </>
+    </div>
   );
 }

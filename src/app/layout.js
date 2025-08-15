@@ -2,7 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./Providers";
 import { Toaster } from "react-hot-toast";
-import SubscriptionGate from "./Components/Reuseable/SubscriptionGate";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,14 +16,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <SubscriptionGate>
-            {children}
-            <Toaster position="top-center" />
-          </SubscriptionGate>
+          {children}
+          <Toaster position="top-center" />
         </Providers>
       </body>
     </html>
   );
 }
 
-// TODO  add the same Subscription.create(...) logic to your completeInstagramRegistration function to cover all sign-up paths.

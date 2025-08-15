@@ -1,45 +1,74 @@
-import { useSession } from "next-auth/react";
-import { planDetails } from "../app/Components/subscription/planDetails";
+"use client";
 
-// A map defining which paid plans get access to specific premium features.
-const featureAccessMap = {
-  "Transaction Management": { plans: ["plus", "premium", "pro"] },
-  "Personalized greetings": { plans: ["plus", "premium", "pro"] },
-  "Customizable chat responses": { plans: ["pro"] },
-  "AI-generated buyer recommendations": { plans: ["plus", "premium", "pro"] },
-  "Sales performance insights": { plans: ["plus", "premium", "pro"] },
-  "Referral rewards program access": { plans: ["premium", "pro"] },
-  "Audience analytics": { plans: ["premium", "pro"] },
-  "After-sales service management": { plans: ["premium", "pro"] },
-};
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+
 
 export function useSubscription() {
-  const { data: session, status } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
+  const backendToken = session?.backendToken;
 
-  const plan = session?.user?.currentPlan || "free";
-  const isLoading = status === "loading";
-  const planData = planDetails[plan];
+  const [data, setData] = useState(null);
+  const [isLoading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  /**
-   * Checks if the current user's plan has access to a specific feature.
-   * @param {string} featureName - The name of the feature from featureList.
-   * @returns {boolean} - True if the user has access, false otherwise.
-   */
-  const hasAccess = (featureName) => {
-    // If featureName is not in our map, it's a standard feature available to all.
-    if (!featureName || !featureAccessMap[featureName]) {
-      return true;
+  useEffect(() => {
+    let mounted = true;
+
+    if (!backendToken || sessionStatus !== "authenticated") {
+      setLoading(false);
+      return;
     }
 
-    // --- FIX: Check if the user's current plan is included in the feature's allowed plans.
-    // This is safer as it defaults to denying access for unlisted plans.
-    return featureAccessMap[featureName].plans.includes(plan);
+    setLoading(true);
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/mine`, {
+      headers: {
+        Authorization: `Bearer ${backendToken}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw { status: res.status, body };
+        }
+        return res.json();
+      })
+      .then((json) => {
+        if (mounted) {
+          setData(json);
+        }
+      })
+      .catch((err) => {
+        if (mounted) {
+          setError(err);
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [backendToken, sessionStatus]);
+
+  const hasAccess = (featureKey) => {
+    if (!data?.entitlements?.features) return false;
+    return !!data.entitlements.features[featureKey];
   };
 
   return {
-    plan,
-    planData,
+    plan: data?.plan || "free",
+    status: data?.status || null,
+    entitlements: data?.entitlements || null,
+    daysRemaining: data?.daysRemaining ?? null,
     isLoading,
+    error,
     hasAccess,
+    raw: data,
   };
 }

@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { ArtworkClientWrapper } from "./client-wrapper";
+import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
 
 async function getArtworks(backendToken, page = 1) {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -40,7 +41,9 @@ const ArtworkManagementPage = async ({ params }) => {
   const initialData = await getArtworks(session.backendToken, 1);
 
   return (
-    <ArtworkClientWrapper userId={params.userId} initialData={initialData} />
+    <ClientSideWrapper>
+      <ArtworkClientWrapper userId={params.userId} initialData={initialData} />
+    </ClientSideWrapper>
   );
 };
 
