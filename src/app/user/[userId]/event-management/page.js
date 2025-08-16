@@ -52,10 +52,8 @@ export default async function EventManagementPage() {
   const initialData = await getEvents(session?.backendToken);
 
   return (
-    <ClientSideWrapper>
-      <SubscriptionGuard>
-        <ClientWrapper initialData={initialData} />
-      </SubscriptionGuard>
-    </ClientSideWrapper>
+    <SubscriptionGuard>
+      <ClientWrapper initialData={initialData} />
+    </SubscriptionGuard>
   );
 }

@@ -27,7 +27,7 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next(); //TODO when clicked signup redirect to hero page
+  return NextResponse.next(); 
 }
 
 export const config = {

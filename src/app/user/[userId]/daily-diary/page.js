@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import DailyDiaryCalendar from "../../../Components/DailyDiary/DailyDiaryCalendar";
-import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
+
 import SubscriptionGuard from "@/app/Components/Reuseable/SubscitpionGuard";
 
 async function getDiaryEntries(token) {
@@ -35,12 +35,10 @@ export default async function DailyDiaryPage() {
   const initialEntries = await getDiaryEntries(session?.backendToken);
 
   return (
-    <ClientSideWrapper>
-      <SubscriptionGuard>
-        <div className="h-full">
-          <DailyDiaryCalendar initialEntries={initialEntries} />
-        </div>
-      </SubscriptionGuard>
-    </ClientSideWrapper>
+    <SubscriptionGuard>
+      <div className="h-full">
+        <DailyDiaryCalendar initialEntries={initialEntries} />
+      </div>
+    </SubscriptionGuard>
   );
 }

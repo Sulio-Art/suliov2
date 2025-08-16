@@ -4,10 +4,10 @@ import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
 
 export default function AiChatbotPage() {
   return (
-    <ClientSideWrapper>
-      <SubscriptionGuard>
-        <ClientWrapper />
-      </SubscriptionGuard>
-    </ClientSideWrapper>
+    <SubscriptionGuard>
+      <ClientWrapper />
+    </SubscriptionGuard>
   );
 }
+
+//TODO race behaviour when clicked to page , upgrade showng for 1 sec

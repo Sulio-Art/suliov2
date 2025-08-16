@@ -1,45 +1,37 @@
 "use client";
 
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { useState, createContext, useContext } from "react";
 import { Loader2 } from "lucide-react";
-import Sidebar from "../../Components/User/Sidebar";
-import { useInstagramConnection } from "@/hooks/useInstagramConnection";
-import { useSubscription } from "@/hooks/useSubscription";
+import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+
+import { useInstagramConnection } from "@/hooks/useInstagramConnection";
+import Sidebar from "../../Components/User/Sidebar";
+import InstagramConnectionGate from "@/app/Components/auth/instagram/InstagramConnectionGate"; // <-- IMPORT THE NEW GATE
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-const ProtectionContext = createContext(null);
-
-export const useProtection = () => {
-  const context = useContext(ProtectionContext);
-  if (!context) {
-    throw new Error("useProtection must be used within a ProtectionProvider");
-  }
-  return context;
-};
-
 export default function UserLayout({ children }) {
-  const { data: session, status } = useSession();
+  const { status: sessionStatus } = useSession();
   const pathname = usePathname();
 
   const { isConnected: isInstagramConnected, loading: isConnectionLoading } =
     useInstagramConnection();
-  const { entitlements, isLoading: isSubscriptionLoading } = useSubscription();
 
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const isLoading =
-    status === "loading" || isConnectionLoading || isSubscriptionLoading;
+  const isLoading = sessionStatus === "loading" || isConnectionLoading;
 
-  let lockReason = null;
-  if (!isLoading) {
-    if (!isInstagramConnected) {
-      lockReason = "instagram";
-    }
-  }
+  // --- MODIFICATION START ---
+  // Define which pages are EXEMPT from the Instagram connection lock.
+  const isExemptPage =
+    pathname.includes("/profile") || pathname.includes("/subscription");
+
+  // Determine if the UI should be in the "locked" state.
+  const isLocked = !isInstagramConnected && !isExemptPage && !isLoading;
+  // --- MODIFICATION END ---
 
   const handleConnectToInstagram = async () => {
     setIsConnecting(true);
@@ -58,28 +50,36 @@ export default function UserLayout({ children }) {
     }
   };
 
-  const protectionContextValue = {
-    isLoading,
-    lockReason,
-    pathname,
-    handleConnectToInstagram,
-    isConnecting,
-  };
-
   return (
-    <ProtectionContext.Provider value={protectionContextValue}>
-      <div className="flex h-screen bg-gray-100">
-        <Sidebar isInstagramConnected={isInstagramConnected} />
-        <main className="flex-1 overflow-y-auto relative">
-          {isLoading ? (
-            <div className="flex h-full w-full items-center justify-center">
-              <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+    <div className="flex h-screen bg-gray-100">
+      {/* The Sidebar is a direct child of the flex container, so it will not be blurred. */}
+      <Sidebar isInstagramConnected={isInstagramConnected} />
+
+      {/* The <main> tag will contain the page content and our new gate */}
+      <main className="flex-1 overflow-y-auto relative">
+        {isLoading ? (
+          <div className="flex h-full w-full items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+          </div>
+        ) : (
+          <>
+            {/* This div wraps the actual page content. It gets blurred and disabled when locked. */}
+            <div className={cn(isLocked && "blur-md pointer-events-none")}>
+              {children}
             </div>
-          ) : (
-            children
-          )}
-        </main>
-      </div>
-    </ProtectionContext.Provider>
+
+            {/* If the UI is locked, render the Gate component ON TOP of the blurred content. */}
+            {isLocked && (
+              <InstagramConnectionGate
+                onConnect={handleConnectToInstagram}
+                isConnecting={isConnecting}
+              />
+            )}
+          </>
+        )}
+      </main>
+    </div>
   );
 }
+
+//TODO need to get original ui of hero page

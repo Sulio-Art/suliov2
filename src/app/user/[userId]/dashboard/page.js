@@ -4,10 +4,8 @@ import SubscriptionGuard from "@/app/Components/Reuseable/SubscitpionGuard";
 
 export default function DashboardPage() {
   return (
-    <ClientSideWrapper>
-      <SubscriptionGuard>
-        <ClientWrapper />
-      </SubscriptionGuard>
-    </ClientSideWrapper>
+    <SubscriptionGuard>
+      <ClientWrapper />
+    </SubscriptionGuard>
   );
 }

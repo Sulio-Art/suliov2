@@ -42,14 +42,9 @@ const ArtworkManagementPage = async ({ params }) => {
   const initialData = await getArtworks(session.backendToken, 1);
 
   return (
-    <ClientSideWrapper>
-      <SubscriptionGuard>
-        <ArtworkClientWrapper
-          userId={params.userId}
-          initialData={initialData}
-        />
-      </SubscriptionGuard>
-    </ClientSideWrapper>
+    <SubscriptionGuard>
+      <ArtworkClientWrapper userId={params.userId} initialData={initialData} />
+    </SubscriptionGuard>
   );
 };
 
