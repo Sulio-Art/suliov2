@@ -18,11 +18,13 @@ export default function RecentTransactions({ transactions = [], userId }) {
           Recent Transaction History
         </div>
 
-        <Link href={`/user/${userId}/transaction-management`}>
-          <span className="text-xs text-blue-600 font-medium cursor-pointer hover:underline">
-            See all
-          </span>
-        </Link>
+        {transactions && transactions.length > 0 && (
+          <Link href={`/user/${userId}/transaction-management`}>
+            <span className="text-xs text-blue-600 font-medium cursor-pointer hover:underline">
+              See all
+            </span>
+          </Link>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

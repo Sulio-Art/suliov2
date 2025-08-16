@@ -34,16 +34,10 @@ export default function UserLayout({ children }) {
   const isLoading =
     status === "loading" || isConnectionLoading || isSubscriptionLoading;
 
-
   let lockReason = null;
   if (!isLoading) {
-   
     if (!isInstagramConnected) {
       lockReason = "instagram";
-    }
-    
-    else if (entitlements?.isActive === false) {
-      lockReason = "subscription";
     }
   }
 
@@ -66,7 +60,7 @@ export default function UserLayout({ children }) {
 
   const protectionContextValue = {
     isLoading,
-    lockReason, 
+    lockReason,
     pathname,
     handleConnectToInstagram,
     isConnecting,

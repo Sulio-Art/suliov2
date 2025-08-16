@@ -12,17 +12,10 @@ import {
   Briefcase,
   Mail,
   Phone,
-  Shield,
 } from "lucide-react";
 
 export default function ProfileDetails({ profile }) {
-  // Defensive cleanup for easier rendering
   const socials = profile?.socialLinks || {};
-
-  const handleVerifyPhone = () => {
-    // Add your phone verification logic here
-    console.log("Verifying phone number:", profile?.userId?.phoneNumber);
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -119,13 +112,6 @@ export default function ProfileDetails({ profile }) {
                   <Phone className="h-5 w-5 text-gray-400" />
                   <span>{profile.userId.phoneNumber}</span>
                 </div>
-                <button
-                  onClick={handleVerifyPhone}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <Shield className="h-4 w-4" />
-                  Verify
-                </button>
               </div>
             )}
           </CardContent>

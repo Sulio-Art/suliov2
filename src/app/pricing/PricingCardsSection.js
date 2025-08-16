@@ -7,25 +7,39 @@ import toast from "react-hot-toast";
 import { planDetails } from "../Components/subscription/planDetails";
 import PricingCard from "./PricingCard";
 import { cn } from "@/lib/utils";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function PricingCardsSection() {
-  const { data: session, status } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [isLoading, setIsLoading] = useState(null);
 
+  const { status: subscriptionStatus, plan: currentPlan } = useSubscription();
+
+  const isPostTrial = subscriptionStatus === "expired";
+
   const handlePayment = async (plan) => {
+    if (plan.id === currentPlan) {
+      toast.info("This is already your current plan.");
+      return;
+    }
+
     if (plan.id === "free") {
+      if (isPostTrial) {
+        toast.error("Your trial has ended. Please select a paid plan.");
+        return;
+      }
       toast.info("You are already on the Free plan!");
-      if (status === "authenticated") {
+      if (sessionStatus === "authenticated") {
         router.push(`/user/${session.user.id}/dashboard`);
       }
       return;
     }
 
-    if (status !== "authenticated") {
+    if (sessionStatus !== "authenticated") {
       toast.error("Please log in to choose a plan.");
       router.push("/auth/login");
       return;
@@ -93,7 +107,10 @@ export default function PricingCardsSection() {
             }
             setIsLoading(null);
           },
-          prefill: { name: session.user.name, email: session.user.email },
+          prefill: {
+            name: session.user.name,
+            email: session.user.email,
+          },
           theme: { color: "#4F46E5" },
           modal: {
             ondismiss: function () {
@@ -152,6 +169,8 @@ export default function PricingCardsSection() {
           onSelect={handlePayment}
           isLoading={isLoading === planDetails.free.id}
           isPopular={false}
+          isPostTrial={isPostTrial}
+          currentPlan={currentPlan}
         />
         <PricingCard
           plan={planDetails.plus}
@@ -160,6 +179,7 @@ export default function PricingCardsSection() {
           onSelect={handlePayment}
           isLoading={isLoading === planDetails.plus.id}
           isPopular={false}
+          currentPlan={currentPlan}
         />
         <PricingCard
           plan={planDetails.premium}
@@ -168,6 +188,7 @@ export default function PricingCardsSection() {
           onSelect={handlePayment}
           isLoading={isLoading === planDetails.premium.id}
           isPopular={true}
+          currentPlan={currentPlan}
         />
         <PricingCard
           plan={planDetails.pro}
@@ -176,6 +197,7 @@ export default function PricingCardsSection() {
           onSelect={handlePayment}
           isLoading={isLoading === planDetails.pro.id}
           isPopular={false}
+          currentPlan={currentPlan}
         />
       </div>
     </div>

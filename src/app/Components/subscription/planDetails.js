@@ -23,12 +23,12 @@ export const planDetails = {
     pricing: {
       monthly: {
         price: "$0",
-        billing: "Forever free for individuals",
+        billing: "",
         amount: 0,
       },
       yearly: {
         price: "$0",
-        billing: "Forever free for individuals",
+        billing: "",
         amount: 0,
       },
     },
@@ -81,7 +81,7 @@ export const planDetails = {
   },
   premium: {
     id: "premium",
-    name: "Premium", 
+    name: "Premium",
     pricing: {
       monthly: { price: "$16", billing: "$16 billed monthly", amount: 16 },
       yearly: {

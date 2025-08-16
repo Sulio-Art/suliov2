@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -51,7 +50,6 @@ export default function Sidebar({ isInstagramConnected }) {
       title: "Transaction Management",
       icon: Layers,
       href: userId ? `/user/${userId}/transaction-management` : "#",
-      
       feature: "transactionManagement",
     },
     {
@@ -89,7 +87,6 @@ export default function Sidebar({ isInstagramConnected }) {
         {mainItems.map((item) => {
           const isActive = item.href !== "#" && pathname.startsWith(item.href);
 
-         
           const isLocked = !isInstagramConnected && !item.isExempt;
 
           return (

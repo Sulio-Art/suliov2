@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import ClientWrapper from "./client-wrapper";
 import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
+import SubscriptionGuard from "@/app/Components/Reuseable/SubscitpionGuard";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -52,7 +53,9 @@ export default async function EventManagementPage() {
 
   return (
     <ClientSideWrapper>
-      <ClientWrapper initialData={initialData} />
+      <SubscriptionGuard>
+        <ClientWrapper initialData={initialData} />
+      </SubscriptionGuard>
     </ClientSideWrapper>
   );
 }

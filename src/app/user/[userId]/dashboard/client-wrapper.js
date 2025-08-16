@@ -17,6 +17,26 @@ import Onboarding from "../../../Components/dashboard/Onboarding";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+const DashboardSkeleton = () => (
+  <div className="p-4 md:p-8 bg-gray-50 min-h-screen flex flex-col gap-8 animate-pulse">
+    <div className="h-9 bg-gray-200 rounded w-1/4"></div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+      <div className="h-20 bg-gray-200 rounded-xl"></div>
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="h-48 bg-gray-200 rounded-xl"></div>
+        <div className="h-48 bg-gray-200 rounded-xl"></div>
+      </div>
+      <div className="h-48 bg-gray-200 rounded-xl"></div>
+    </div>
+    <div className="h-64 bg-gray-200 rounded-xl"></div>
+  </div>
+);
+
 const FullDashboard = ({ dashboardData, userId }) => (
   <div className="p-4 md:p-8 bg-gray-50 min-h-screen flex flex-col gap-8">
     <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -86,6 +106,7 @@ export default function ClientWrapper() {
           }
         } catch (error) {
           console.error(error);
+          setDashboardData({});
         } finally {
           setIsLoading(false);
         }
@@ -110,7 +131,11 @@ export default function ClientWrapper() {
   return (
     <>
       {isOnboardingComplete ? (
-        <FullDashboard dashboardData={dashboardData} userId={userId} />
+        dashboardData ? (
+          <FullDashboard dashboardData={dashboardData} userId={userId} />
+        ) : (
+          <DashboardSkeleton />
+        )
       ) : (
         <Onboarding onboardingStatus={onboardingStatus} userId={userId} />
       )}

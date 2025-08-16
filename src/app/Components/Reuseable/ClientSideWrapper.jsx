@@ -3,37 +3,22 @@
 import { useState, useEffect } from "react";
 import { useProtection } from "../../user/[userId]/layout";
 import InstagramConnectModal from "../auth/instagram/InstagramConnectModal";
-import UpgradePlanPrompt from "./UpgradePlanprompt";
 
 export default function ClientSideWrapper({ children }) {
-  const { lockReason, pathname, handleConnectToInstagram, isConnecting } =
+  const { lockReason, handleConnectToInstagram, isConnecting } =
     useProtection();
 
-  const isExempt =
-    pathname.includes("/subscription") || pathname.includes("/profile");
-  const isPageLocked = !isExempt && lockReason !== null;
+  const isPageLocked = lockReason === "instagram";
 
   const [isIgModalOpen, setIsIgModalOpen] = useState(false);
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   useEffect(() => {
     if (isPageLocked) {
-      
-      if (lockReason === "instagram") {
-        setIsIgModalOpen(true);
-        setIsUpgradeModalOpen(false); 
-      }
-      
-      else if (lockReason === "subscription") {
-        setIsUpgradeModalOpen(true);
-        setIsIgModalOpen(false); 
-      }
+      setIsIgModalOpen(true);
     } else {
-     
       setIsIgModalOpen(false);
-      setIsUpgradeModalOpen(false);
     }
-  }, [isPageLocked, lockReason, pathname]);
+  }, [isPageLocked]);
 
   return (
     <div className="relative h-full w-full">
@@ -48,12 +33,6 @@ export default function ClientSideWrapper({ children }) {
         isConnecting={isConnecting}
       />
 
-     
-      <UpgradePlanPrompt
-        isOpen={isUpgradeModalOpen}
-        onClose={() => setIsUpgradeModalOpen(false)}
-        currentPlan="Free (Trial Expired)"
-      />
     </div>
   );
 }

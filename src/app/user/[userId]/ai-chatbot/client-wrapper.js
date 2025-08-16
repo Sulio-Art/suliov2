@@ -21,6 +21,7 @@ export default function ClientWrapper() {
   return (
     <div className="w-full max-w-[1200px] mx-auto h-full min-h-0 flex flex-col">
       <h1 className="text-3xl font-bold mb-6">AI Chatbot Settings</h1>
+
       <div className="bg-white p-4 rounded-xl shadow-sm mb-6 w-full">
         <h2 className="text-md font-medium text-gray-600 mb-3">
           Complete these steps to go live
@@ -33,13 +34,15 @@ export default function ClientWrapper() {
           />
         </div>
       </div>
-      <div className="bg-white rounded-xl shadow-sm flex-1 min-h-0 flex flex-col overflow-hidden w-full max-h-[80vh] min-h-[520px] p-2">
-        <div className="flex border-b">
+
+      <div className="bg-white rounded-xl shadow-sm flex-1 min-h-0 flex flex-col w-full">
+        {/* Tab Headers */}
+        <div className="flex border-b flex-shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("setup")}
             className={cn(
-              "flex-1 py-3 text-center font-semibold transition-colors",
+              "flex-1 py-3 px-4 text-center font-semibold transition-colors",
               activeTab === "setup"
                 ? "text-blue-600 border-b-2 border-blue-600 bg-white"
                 : "text-gray-500 hover:bg-gray-100"
@@ -51,7 +54,7 @@ export default function ClientWrapper() {
             type="button"
             onClick={() => setActiveTab("test")}
             className={cn(
-              "flex-1 py-3 text-center font-semibold transition-colors",
+              "flex-1 py-3 px-4 text-center font-semibold transition-colors",
               activeTab === "test"
                 ? "text-blue-600 border-b-2 border-blue-600 bg-white"
                 : "text-gray-500 hover:bg-gray-100"
@@ -60,7 +63,8 @@ export default function ClientWrapper() {
             Test chatbot
           </button>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-hidden p-0">
+
+        <div className="flex-1 min-h-0 flex flex-col">
           {activeTab === "setup" ? (
             <ChatbotSetup activeStep={activeStep} />
           ) : (

@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, Suspense } from "react";
@@ -60,8 +58,6 @@ function LoginPageContent() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
 
-  const [resetPassword, setResetPassword] = useState("");
-  const [resetConfirm, setResetConfirm] = useState("");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -84,6 +80,7 @@ function LoginPageContent() {
   });
 
   const {
+    control: resetControl,
     handleSubmit: handleResetSubmit,
     formState: { errors: resetErrors },
     watch: watchReset,
@@ -134,12 +131,10 @@ function LoginPageContent() {
     setResetLoading(false);
   };
 
-
   const onVerifyOtp = async (data) => {
     setResetLoading(true);
     setResetError("");
     try {
-      
       const res = await fetch(
         `${BACKEND_API_URL}/api/auth/verify-password-reset-otp`,
         {
@@ -151,8 +146,7 @@ function LoginPageContent() {
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || "Invalid OTP");
 
-      
-      setOtp(data.otp); 
+      setOtp(data.otp);
       setMode("reset-password");
       toast.success("OTP verified! You can now set your new password.");
     } catch (err) {
@@ -171,16 +165,14 @@ function LoginPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: resetEmail,
-          otp, 
+          otp,
           newPassword: data.newPassword,
         }),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.message);
       toast.success("Password reset successfully! You can now log in.");
-      setMode("login");
-      setResetEmail("");
-      setOtp("");
+      router.push("/auth/login");
     } catch (err) {
       setResetError(err.message);
       toast.error(err.message);
@@ -278,11 +270,8 @@ function LoginPageContent() {
           </form>
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm">
-              Don't have an account?{" "}
-              <Link
-                href="/auth/register"
-                className="text-blue-600 hover:text-blue-800"
-              >
+              Don't have an account?
+              <Link href="/" className="text-blue-600 hover:text-blue-800">
                 Sign up
               </Link>
             </p>
@@ -384,7 +373,7 @@ function LoginPageContent() {
               <Label htmlFor="newPassword">New Password</Label>
               <Controller
                 name="newPassword"
-                control={otpControl}
+                control={resetControl}
                 render={({ field }) => (
                   <div className="relative">
                     <Input
@@ -416,7 +405,7 @@ function LoginPageContent() {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Controller
                 name="confirmPassword"
-                control={otpControl}
+                control={resetControl}
                 render={({ field }) => (
                   <div className="relative">
                     <Input
@@ -476,4 +465,3 @@ export default function LoginPage() {
     </>
   );
 }
-//TODO check reset password 
