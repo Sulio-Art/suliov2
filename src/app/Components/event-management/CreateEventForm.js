@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
+import {
+  useCreateEventMutation,
+  useUpdateEventMutation,
+} from "@/redux/Event/eventApi";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -20,15 +24,15 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Loader2, X } from "lucide-react";
 import { DatePicker } from "../ui/date-picker";
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 export default function CreateEventForm({ eventData }) {
   const router = useRouter();
   const { data: session } = useSession();
-
   const isEditMode = !!eventData;
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createEvent, { isLoading: isCreating }] = useCreateEventMutation();
+  const [updateEvent, { isLoading: isUpdating }] = useUpdateEventMutation();
+  const isSubmitting = isCreating || isUpdating;
+
   const [date, setDate] = useState();
   const [formData, setFormData] = useState({
     title: "",
@@ -88,24 +92,19 @@ export default function CreateEventForm({ eventData }) {
     if (!dateObj || !timeStr) return null;
     const [hours, minutes] = timeStr.split(":");
     const newDate = new Date(dateObj);
-
     newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
     return newDate.toISOString();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
     if (!formData.title || !date || !formData.startTime) {
       toast.error("Event Name, Date, and Start Time are required.");
-      setIsSubmitting(false);
       return;
     }
-
     if (formData.endTime && formData.startTime > formData.endTime) {
       toast.error("End time cannot be before the start time.");
-      setIsSubmitting(false);
       return;
     }
 
@@ -115,41 +114,21 @@ export default function CreateEventForm({ eventData }) {
       endTime: combineDateAndTime(date, formData.endTime),
     };
 
-    const url = isEditMode
-      ? `${BACKEND_API_URL}/api/events/${eventData._id}`
-      : `${BACKEND_API_URL}/api/events`;
-    const method = isEditMode ? "PUT" : "POST";
-
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.backendToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-            `Failed to ${isEditMode ? "update" : "create"} event.`
-        );
+      if (isEditMode) {
+        await updateEvent({ id: eventData._id, ...payload }).unwrap();
+        toast.success("Event updated successfully!");
+      } else {
+        await createEvent(payload).unwrap();
+        toast.success("Event created successfully!");
       }
 
-      toast.success(
-        `Event ${isEditMode ? "updated" : "created"} successfully!`
-      );
-      setTimeout(() => {
-        router.push(`/user/${session?.user?.id}/event-management`);
-        router.refresh();
-      }, 1000);
+      router.push(`/user/${session?.user?.id}/event-management`);
     } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setIsSubmitting(false);
+      toast.error(
+        error.data?.message ||
+          `Failed to ${isEditMode ? "update" : "create"} event.`
+      );
     }
   };
 

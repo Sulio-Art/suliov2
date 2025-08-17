@@ -19,7 +19,7 @@ export default function CallToAction() {
             Get Set Up Today
           </Button>
           <p className="text-sm text-gray-400 mt-2">
-            Start your free 30-day trial today!
+            Start your free 90-day trial today!
           </p>
         </div>
       </div>

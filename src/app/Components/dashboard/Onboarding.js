@@ -28,26 +28,26 @@ const OnboardingStep = ({ title, icon, isComplete, href }) => {
     );
 };
 
-export default function Onboarding({ onboardingStatus, userId }) {
-    return (
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-            <div className="w-full max-w-lg bg-white p-6 rounded-xl shadow-md space-y-4">
-                <h2 className="text-lg font-bold text-center text-gray-900">
-                    To get started complete these steps
-                </h2>
-                <OnboardingStep 
-                    title="Upload your first artwork"
-                    icon={<UploadCloud className="h-6 w-6 text-blue-600"/>}
-                    isComplete={onboardingStatus.hasUploadedArtwork}
-                    href={`/user/${userId}/artwork-management/upload`}
-                />
-                <OnboardingStep 
-                    title="Setup your chatbot"
-                    icon={<Bot className="h-6 w-6 text-blue-600"/>}
-                    isComplete={onboardingStatus.isChatbotConfigured}
-                    href={`/user/${userId}/ai-chatbot`}
-                />
-            </div>
-        </div>
-    );
+export default function Onboarding({ onboardingStatus = {}, userId }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-lg bg-white p-6 rounded-xl shadow-md space-y-4">
+        <h2 className="text-lg font-bold text-center text-gray-900">
+          To get started complete these steps
+        </h2>
+        <OnboardingStep
+          title="Upload your first artwork"
+          icon={<UploadCloud className="h-6 w-6 text-blue-600" />}
+          isComplete={onboardingStatus?.hasUploadedArtwork}
+          href={`/user/${userId}/artwork-management/upload`}
+        />
+        <OnboardingStep
+          title="Setup your chatbot"
+          icon={<Bot className="h-6 w-6 text-blue-600" />}
+          isComplete={onboardingStatus?.isChatbotConfigured}
+          href={`/user/${userId}/ai-chatbot`}
+        />
+      </div>
+    </div>
+  );
 }

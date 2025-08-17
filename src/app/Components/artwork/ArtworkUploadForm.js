@@ -6,13 +6,13 @@ import {
   useUpdateArtworkMutation,
   useGetStorageStatsQuery,
 } from "@/redux/Artwork/artworkApi";
+import { useGetMySubscriptionQuery } from "@/redux/Subscription/subscriptionApi";
 import { useRouter } from "next/navigation";
 import { Upload, Loader2, HardDrive, X, Save } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "../../Components/ui/button";
 import { Input } from "../../Components/ui/input";
 import Link from "next/link";
-import { useSubscription } from "@/hooks/useSubscription";
 
 const FormInput = ({ label, children }) => (
   <div>
@@ -25,7 +25,8 @@ const FormInput = ({ label, children }) => (
 
 const StorageIndicator = ({ currentUsage = 0, storageLimit = 0 }) => {
   const usageMB = (currentUsage / 1024 / 1024).toFixed(2);
-  const limitMB = (storageLimit / 1024 / 1024).toFixed(0);
+  const limitMB =
+    storageLimit > 0 ? (storageLimit / 1024 / 1024).toFixed(0) : 0;
   const percentage = storageLimit > 0 ? (currentUsage / storageLimit) * 100 : 0;
   return (
     <div className="bg-gray-50 p-4 rounded-lg border">
@@ -76,14 +77,14 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
   const [createArtwork, { isLoading: isCreating }] = useCreateArtworkMutation();
   const [updateArtwork, { isLoading: isUpdating }] = useUpdateArtworkMutation();
   const { data: storageStats, isLoading: isLoadingStats } =
-    useGetStorageStatsQuery(userId, { skip: !userId });
+    useGetStorageStatsQuery();
 
-  const {
-    status: subscriptionStatus,
-    entitlements,
-    isLoading: isLoadingSubscription,
-    daysRemaining,
-  } = useSubscription();
+  const { data: subscriptionData, isLoading: isLoadingSubscription } =
+    useGetMySubscriptionQuery();
+
+  const subscriptionStatus = subscriptionData?.status;
+  const entitlements = subscriptionData?.entitlements;
+  const daysRemaining = subscriptionData?.daysRemaining;
 
   useEffect(() => {
     if (isEditMode && initialData) {
@@ -108,7 +109,7 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
       const overSized = newFiles.find((f) => f.size > maxBytes);
       if (overSized) {
         toast.error(
-          `File "${overSized.name}" exceeds your plan limit of ${entitlements.artworkMaxSizeMB} MB`
+          `File "${overSized.name}" exceeds your plan limit of ${entitleaments.artworkMaxSizeMB} MB`
         );
         return;
       }
@@ -144,14 +145,17 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (subscriptionStatus === "expired") {
+    if (
+      subscriptionStatus === "expired" ||
+      subscriptionStatus === "trial_expired"
+    ) {
       toast.error("Your subscription has expired. Please upgrade to continue.");
       return;
     }
 
     if (
       storageStats &&
-      storageStats.storageLimit &&
+      typeof storageStats.storageLimit === "number" &&
       storageStats.currentUsage >= storageStats.storageLimit
     ) {
       toast.error(
@@ -193,7 +197,7 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
         return;
       }
 
-      if (storageStats?.storageLimit) {
+      if (typeof storageStats?.storageLimit === "number") {
         const totalNewBytes = selectedFiles.reduce((sum, f) => sum + f.size, 0);
         if (
           storageStats.currentUsage + totalNewBytes >
@@ -220,14 +224,19 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
 
   const isLoading = isCreating || isUpdating || isLoadingSubscription;
 
-  if (subscriptionStatus === "expired") {
+  if (
+    subscriptionStatus === "expired" ||
+    subscriptionStatus === "trial_expired"
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
         <div className="bg-white p-8 rounded-xl shadow-lg max-w-xl text-center">
-          <h2 className="text-2xl font-bold mb-4">Your trial has ended</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            Your Subscription Has Ended
+          </h2>
           <p className="text-gray-600 mb-6">
-            Your 90-day free trial has expired. Upgrade to continue uploading
-            and using services.
+            Your free trial or subscription has expired. Please upgrade to
+            continue uploading and using our services.
           </p>
           <div className="flex gap-4 justify-center">
             <Link href="/pricing">
@@ -235,9 +244,6 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
                 Upgrade Plan
               </Button>
             </Link>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Refresh
-            </Button>
           </div>
         </div>
       </div>
@@ -255,7 +261,7 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
             {entitlements && (
               <div className="text-sm text-gray-600">
                 Plan:{" "}
-                <span className="font-semibold">
+                <span className="font-semibold capitalize">
                   {entitlements.effectivePlan}
                 </span>
                 {" • "}Max file: {entitlements.artworkMaxSizeMB} MB
@@ -455,7 +461,8 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
               className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
               disabled={
                 isLoading ||
-                (storageStats?.storageLimit &&
+                (storageStats &&
+                  typeof storageStats.storageLimit === "number" &&
                   storageStats.currentUsage >= storageStats.storageLimit)
               }
             >

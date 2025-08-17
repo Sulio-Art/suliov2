@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { ArtworkClientWrapper } from "./client-wrapper";
-import ClientSideWrapper from "@/app/Components/Reuseable/ClientSideWrapper";
+
 import SubscriptionGuard from "@/app/Components/Reuseable/SubscitpionGuard";
 
 async function getArtworks(backendToken, page = 1) {

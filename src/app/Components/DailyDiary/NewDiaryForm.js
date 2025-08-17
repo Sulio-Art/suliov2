@@ -31,6 +31,11 @@ import { Textarea } from "@/app/Components/ui/textarea";
 import { Button } from "@/app/Components/ui/button";
 import { UploadCloud, Trash2, Loader2, X } from "lucide-react";
 import { parseISO, startOfToday } from "date-fns";
+import {
+  useGetDiaryEntryByIdQuery,
+  useCreateDiaryEntryMutation,
+  useUpdateDiaryEntryMutation,
+} from "../../../redux/Diary/diaryApi";
 
 const diaryFormSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
@@ -46,8 +51,6 @@ const diaryFormSchema = z.object({
 export default function NewDiaryForm() {
   const [files, setFiles] = useState([]);
   const [existingPhotos, setExistingPhotos] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [photosCleared, setPhotosCleared] = useState(false);
 
   const { data: session } = useSession();
@@ -58,6 +61,15 @@ export default function NewDiaryForm() {
   const entryId = params.entryId;
   const isEditMode = !!entryId;
   const preselectedDate = searchParams.get("date");
+
+  const { data: entryData, isLoading: isFetchingEntry } =
+    useGetDiaryEntryByIdQuery(entryId, { skip: !isEditMode });
+
+  const [createDiaryEntry, { isLoading: isCreating }] =
+    useCreateDiaryEntryMutation();
+  const [updateDiaryEntry, { isLoading: isUpdating }] =
+    useUpdateDiaryEntryMutation();
+  const isSubmitting = isCreating || isUpdating;
 
   const form = useForm({
     resolver: zodResolver(diaryFormSchema),
@@ -76,6 +88,8 @@ export default function NewDiaryForm() {
   const watchedValues = form.watch();
   const isMounted = useRef(false);
 
+  const toastShownRef = useRef(false);
+
   useEffect(() => {
     if (isMounted.current) {
       if (
@@ -90,79 +104,63 @@ export default function NewDiaryForm() {
   }, [watchedValues, storageKey]);
 
   useEffect(() => {
-    const savedDraft = localStorage.getItem(storageKey);
-    if (savedDraft) {
-      const draftData = JSON.parse(savedDraft);
-      toast(
-        (t) => (
-          <div className="flex flex-col gap-2">
-            <span>You have an unsaved draft. Restore it?</span>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  form.reset({
-                    ...draftData,
-                    date: draftData.date ? new Date(draftData.date) : undefined,
-                  });
-                  toast.dismiss(t.id);
-                  toast.success("Draft restored!");
-                }}
-              >
-                Restore
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  localStorage.removeItem(storageKey);
-                  toast.dismiss(t.id);
-                }}
-              >
-                Dismiss
-              </Button>
+    
+    if (!toastShownRef.current) {
+      const savedDraft = localStorage.getItem(storageKey);
+      if (savedDraft) {
+        const draftData = JSON.parse(savedDraft);
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-2">
+              <span>You have an unsaved draft. Restore it?</span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    form.reset({
+                      ...draftData,
+                      date: draftData.date
+                        ? new Date(draftData.date)
+                        : undefined,
+                    });
+                    toast.dismiss(t.id);
+                    toast.success("Draft restored!");
+                  }}
+                >
+                  Restore
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    localStorage.removeItem(storageKey);
+                    toast.dismiss(t.id);
+                  }}
+                >
+                  Dismiss
+                </Button>
+              </div>
             </div>
-          </div>
-        ),
-        { duration: 10000 }
-      );
+          ),
+          { duration: 10000 }
+        );
+        toastShownRef.current = true;
+      }
     }
     isMounted.current = true;
   }, [storageKey, form]);
 
-
   useEffect(() => {
-    if (isEditMode) {
-      const fetchEntry = async () => {
-        setIsLoading(true);
-        try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/diary/${entryId}`,
-            {
-              headers: { Authorization: `Bearer ${session.backendToken}` },
-            }
-          );
-          if (!res.ok) throw new Error("Failed to fetch diary entry.");
-          const data = await res.json();
-          const photos = data.artworkPhotos || [];
-          form.reset({
-            ...data,
-            date: parseISO(data.date),
-            artworkPhotos: photos,
-          });
-          setExistingPhotos(photos);
-        } catch (error) {
-          toast.error(error.message);
-          router.back();
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      if (session) fetchEntry();
-    } else {
-      setIsLoading(false);
+    if (isEditMode && entryData) {
+      const photos = entryData.artworkPhotos || [];
+      form.reset({
+        ...entryData,
+        date: parseISO(entryData.date),
+        artworkPhotos: photos,
+      });
+      setExistingPhotos(photos);
     }
-  }, [entryId, isEditMode, session, router, form]);
+  }, [entryData, isEditMode, form]);
 
   const onDrop = useCallback(
     async (acceptedFiles) => {
@@ -187,7 +185,7 @@ export default function NewDiaryForm() {
         );
         const updatedFiles = [...files, ...compressedFiles];
         setFiles(updatedFiles);
-        setPhotosCleared(false); 
+        setPhotosCleared(false);
         form.setValue("artworkPhotos", [...existingPhotos, ...updatedFiles], {
           shouldValidate: true,
         });
@@ -227,14 +225,12 @@ export default function NewDiaryForm() {
   }, [files]);
 
   const onSubmit = async (data) => {
-    
     const isValid = await form.trigger();
     if (!isValid) {
       toast.error("Please fill out all required fields.");
       return;
     }
 
-    setIsSubmitting(true);
     const loadingToastId = toast.loading(
       isEditMode ? "Updating diary..." : "Uploading diary..."
     );
@@ -254,37 +250,27 @@ export default function NewDiaryForm() {
       files.forEach((file) => formData.append("artworkPhotos", file));
     }
 
-    const url = isEditMode
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/diary/${entryId}`
-      : `${process.env.NEXT_PUBLIC_API_URL}/api/diary`;
-    const method = isEditMode ? "PUT" : "POST";
-
     try {
-      const response = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${session.backendToken}` },
-        body: formData,
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
+      if (isEditMode) {
+        await updateDiaryEntry({ id: entryId, formData }).unwrap();
+      } else {
+        await createDiaryEntry(formData).unwrap();
       }
 
       localStorage.removeItem(storageKey);
-
       toast.success(isEditMode ? "Diary updated!" : "Diary created!", {
         id: loadingToastId,
       });
       router.push(`/user/${session.user.id}/daily-diary`);
       router.refresh();
     } catch (error) {
-      toast.error(error.message, { id: loadingToastId });
-    } finally {
-      setIsSubmitting(false);
+      toast.error(error.data?.message || "An error occurred.", {
+        id: loadingToastId,
+      });
     }
   };
 
-  if (isLoading) {
+  if (isFetchingEntry) {
     return (
       <div className="flex justify-center items-center p-12">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />

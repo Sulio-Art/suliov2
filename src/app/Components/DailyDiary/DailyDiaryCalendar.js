@@ -45,6 +45,11 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import {
+  useGetMyDiaryEntriesQuery,
+  useDeleteDiaryEntryMutation,
+} from "../../../redux/Diary/diaryApi";
+import CalendarSkeleton from "./CalendarSkeleton";
 
 const DiaryDetailCard = ({ entry, onEdit, onDelete }) => (
   <div className="group/item relative flex flex-col gap-2 p-2">
@@ -103,12 +108,14 @@ const DiaryTag = ({ category, subject }) => (
   </div>
 );
 
-export default function DailyDiaryCalendar({ initialEntries = [] }) {
-  const [diaryEntries, setDiaryEntries] = useState(initialEntries);
+export default function DailyDiaryCalendar() {
+  const { data: diaryEntries = [], isLoading } = useGetMyDiaryEntriesQuery();
+  const [deleteDiaryEntry, { isLoading: isDeleting }] =
+    useDeleteDiaryEntryMutation();
+
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: session } = useSession();
   const router = useRouter();
@@ -122,31 +129,20 @@ export default function DailyDiaryCalendar({ initialEntries = [] }) {
 
   const confirmDelete = async () => {
     if (!entryToDelete) return;
-    setIsDeleting(true);
-    const originalEntries = [...diaryEntries];
-    setDiaryEntries((prev) =>
-      prev.filter((entry) => entry._id !== entryToDelete._id)
-    );
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/diary/${entryToDelete._id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${session.backendToken}` },
-        }
-      );
-      if (!response.ok)
-        throw new Error("Failed to delete entry. Please try again.");
+      await deleteDiaryEntry(entryToDelete._id).unwrap();
       toast.success("Diary entry deleted!");
     } catch (err) {
-      toast.error(err.message);
-      setDiaryEntries(originalEntries);
+      toast.error(err.data?.message || "Failed to delete entry.");
     } finally {
       setIsConfirmOpen(false);
       setEntryToDelete(null);
-      setIsDeleting(false);
     }
   };
+
+  if (isLoading) {
+    return <CalendarSkeleton />;
+  }
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));

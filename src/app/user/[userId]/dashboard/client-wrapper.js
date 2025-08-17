@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import {
   Users,
@@ -14,8 +13,10 @@ import AgeDonut from "../../../Components/dashboard/AgeDonut";
 import SentimentScore from "../../../Components/dashboard/SentimentScore";
 import RecentTransactions from "../../../Components/dashboard/RecentTransactions";
 import Onboarding from "../../../Components/dashboard/Onboarding";
-
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
+import {
+  useGetOnboardingStatusQuery,
+  useGetDashboardStatsQuery,
+} from "@/redux/Dashboard/dashboardApi";
 
 const DashboardSkeleton = () => (
   <div className="p-4 md:p-8 bg-gray-50 min-h-screen flex flex-col gap-8 animate-pulse">
@@ -72,73 +73,37 @@ const FullDashboard = ({ dashboardData, userId }) => (
 );
 
 export default function ClientWrapper() {
-  const { data: session, status } = useSession();
-  const [onboardingStatus, setOnboardingStatus] = useState(null);
-  const [dashboardData, setDashboardData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      const checkOnboarding = async () => {
-        try {
-          const statusRes = await fetch(
-            `${BACKEND_API_URL}/api/dashboard/onboarding-status`,
-            {
-              headers: { Authorization: `Bearer ${session.backendToken}` },
-            }
-          );
-          if (!statusRes.ok)
-            throw new Error("Could not check onboarding status.");
-          const statusData = await statusRes.json();
-          setOnboardingStatus(statusData);
+  const { data: onboardingStatus, isLoading: isOnboardingLoading } =
+    useGetOnboardingStatusQuery();
 
-          if (statusData.hasUploadedArtwork && statusData.isChatbotConfigured) {
-            const dataRes = await fetch(
-              `${BACKEND_API_URL}/api/dashboard/stats`,
-              {
-                headers: { Authorization: `Bearer ${session.backendToken}` },
-              }
-            );
-            if (!dataRes.ok) throw new Error("Failed to fetch dashboard data.");
-            const data = await dataRes.json();
-            setDashboardData(data);
-          }
-        } catch (error) {
-          console.error(error);
-          setDashboardData({});
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      checkOnboarding();
-    } else if (status === "unauthenticated") {
-      setIsLoading(false);
-    }
-  }, [status, session]);
+  const isOnboardingComplete =
+    onboardingStatus?.hasUploadedArtwork &&
+    onboardingStatus?.isChatbotConfigured;
 
-  if (isLoading || !onboardingStatus) {
+  const { data: dashboardData, isLoading: isStatsLoading } =
+    useGetDashboardStatsQuery(undefined, { skip: !isOnboardingComplete });
+
+  const isLoading =
+    isOnboardingLoading || (isOnboardingComplete && isStatsLoading);
+
+  if (isOnboardingLoading) {
     return (
-      <div className="flex-1 p-8 flex items-center justify-center">
+      <div className="flex-1 p-8 flex items-center justify-center h-screen">
         <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
       </div>
     );
   }
 
-  const isOnboardingComplete =
-    onboardingStatus.hasUploadedArtwork && onboardingStatus.isChatbotConfigured;
+  if (!isOnboardingComplete) {
+    return <Onboarding onboardingStatus={onboardingStatus} userId={userId} />;
+  }
 
-  return (
-    <>
-      {isOnboardingComplete ? (
-        dashboardData ? (
-          <FullDashboard dashboardData={dashboardData} userId={userId} />
-        ) : (
-          <DashboardSkeleton />
-        )
-      ) : (
-        <Onboarding onboardingStatus={onboardingStatus} userId={userId} />
-      )}
-    </>
-  );
+  if (isLoading || !dashboardData) {
+    return <DashboardSkeleton />;
+  }
+
+  return <FullDashboard dashboardData={dashboardData} userId={userId} />;
 }

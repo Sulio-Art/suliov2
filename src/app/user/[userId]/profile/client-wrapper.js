@@ -1,121 +1,91 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { Loader2, AlertTriangle } from "lucide-react";
-import ProfileHeader from "../../../Components/profile/ProfileHeader";
-import ProfileDetails from "../../../Components/profile/ProfileDetails";
-import ProfileEditForm from "../../../Components/profile/ProfileEditForm";
-import { Dialog } from "@headlessui/react";
+import { useState } from "react";
+import {
+  useGetMyProfileQuery,
+  useUpdateMyProfileMutation,
+} from "@/redux/Profile/profileApi";
 import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
+import ProfileHeader from "@/app/Components/profile/ProfileHeader";
+import ProfileDetails from "@/app/Components/profile/ProfileDetails";
+import ProfileEditForm from "@/app/Components/profile/ProfileEditForm";
 
 export default function ClientWrapper() {
-  const { data: session, status } = useSession();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  useEffect(() => {
-    if (status === "authenticated" && session?.backendToken) {
-      const fetchProfile = async () => {
-        try {
-          const response = await fetch(`${BACKEND_API_URL}/profiles/me`, {
-            headers: { Authorization: `Bearer ${session.backendToken}` },
-          });
-          if (!response.ok) throw new Error("Failed to fetch profile.");
-          const data = await response.json();
-          setProfile(data);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchProfile();
-    } else if (status === "unauthenticated") {
-      setLoading(false);
-    }
-  }, [session, status]);
+  const backendToken = useSelector(selectBackendToken);
+
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    isFetching,
+  } = useGetMyProfileQuery(undefined, {
+    skip: !backendToken,
+  });
+
+  const [updateMyProfile, { isLoading: isSaving }] =
+    useUpdateMyProfileMutation();
 
   const handleSave = async (formData) => {
-    try {
-      const response = await fetch(`${BACKEND_API_URL}/profiles/me`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${session.backendToken}` },
-        body: formData,
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Failed to update profile.");
-      }
-      const updatedProfile = await response.json();
-      setProfile(updatedProfile);
-      toast.success("Profile updated successfully!");
-      setIsEditing(false);
-    } catch (err) {
-      toast.error(err.message);
-    }
+    toast.promise(updateMyProfile(formData).unwrap(), {
+      loading: "Saving your profile...",
+      success: () => {
+        setIsEditing(false);
+        return "Profile updated successfully!";
+      },
+      error: (err) => `Failed to update: ${err.data?.message || err.message}`,
+    });
   };
 
-  if (loading) {
+  if ((isLoading || isFetching) && !profile) {
     return (
-      <div className="flex-1 p-8 flex items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center p-16">
         <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
       </div>
     );
   }
 
-  if (error) {
+  if (isError || (!isLoading && !profile && backendToken)) {
     return (
-      <div className="flex-1 p-8 flex flex-col items-center justify-center text-red-500">
-        <AlertTriangle className="h-10 w-10 mb-2" />
-        <span>{error}</span>
+      <div className="text-center p-16">
+        <h2 className="text-xl font-semibold text-red-600">
+          Could not load your profile.
+        </h2>
+        <p className="text-gray-500">Please try refreshing the page.</p>
       </div>
     );
   }
 
-  if (!session) {
+  if (!profile) {
     return (
-      <div className="flex-1 p-8 text-center">
-        Please log in to view your profile.
+      <div className="flex h-full w-full items-center justify-center p-16">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-100">
+    <div className="flex-1 p-4 md:p-8 bg-gray-50">
       <ProfileHeader
         profile={profile}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
       />
-      <div className="flex-1 flex flex-col">
-        <main className="p-4 md:p-8 flex-1">
+      <div className="mt-16">
+        {isEditing ? (
+          <ProfileEditForm
+            profile={profile}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : (
           <ProfileDetails profile={profile} />
-          {/* Modal dialog for editing profile */}
-          <Dialog
-            open={isEditing}
-            onClose={() => setIsEditing(false)}
-            className="z-50"
-          >
-            <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
-            <div className="fixed inset-0 flex items-center justify-center">
-              <Dialog.Panel className="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl border max-h-[100vh] overflow-y-auto">
-                <Dialog.Title className="text-2xl font-bold mb-3">
-                  Edit Profile
-                </Dialog.Title>
-                <ProfileEditForm
-                  profile={profile}
-                  onSave={handleSave}
-                  onCancel={() => setIsEditing(false)}
-                />
-              </Dialog.Panel>
-            </div>
-          </Dialog>
-        </main>
+        )}
       </div>
     </div>
   );

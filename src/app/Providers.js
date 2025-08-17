@@ -1,21 +1,36 @@
 "use client";
 
 import { SessionProvider, useSession } from "next-auth/react";
-import { Provider as ReduxProvider } from "react-redux";
+import {
+  Provider as ReduxProvider,
+  useDispatch,
+  useSelector,
+} from "react-redux";
 import { store } from "@/redux/store";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { setCredentials } from "@/redux/Artwork/artworkSlice";
+import { setCredentials, selectBackendToken } from "@/redux/auth/authSlice";
 
 const AuthSync = ({ children }) => {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
 
+  const tokenInStore = useSelector(selectBackendToken);
+
   useEffect(() => {
-    if (status === "authenticated" && session) {
-      dispatch(setCredentials(session));
+    if (
+      status === "authenticated" &&
+      session?.backendToken &&
+      session.backendToken !== tokenInStore
+    ) {
+      console.log("[AuthSync] Session token detected. Syncing to Redux store.");
+      dispatch(
+        setCredentials({
+          user: session.user,
+          backendToken: session.backendToken,
+        })
+      );
     }
-  }, [status, session, dispatch]);
+  }, [status, session, dispatch, tokenInStore]);
 
   return <>{children}</>;
 };
