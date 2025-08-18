@@ -1,11 +1,11 @@
 "use client";
 
-import { useSubscription } from "@/hooks/useSubscription";
+import { useGetMySubscriptionQuery } from "@/redux/Subscription/subscriptionApi";
 import UpgradePlanPrompt from "./UpgradePlanprompt";
 import { Loader2 } from "lucide-react";
 
 export default function SubscriptionGuard({ children }) {
-  const { entitlements, isLoading } = useSubscription();
+  const { data: subscription, isLoading } = useGetMySubscriptionQuery();
 
   if (isLoading) {
     return (
@@ -15,7 +15,7 @@ export default function SubscriptionGuard({ children }) {
     );
   }
 
-  if (!isLoading && !entitlements.isActive) {
+  if (!isLoading && !subscription?.entitlements?.isActive) {
     return (
       <div className="flex-1 p-8 bg-gray-50 flex items-center justify-center">
         <UpgradePlanPrompt featureName="the AI Artist Platform" />

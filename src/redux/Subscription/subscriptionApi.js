@@ -6,6 +6,7 @@ export const subscriptionApi = createApi({
   reducerPath: "subscriptionApi",
   baseQuery: fetchBaseQuery({
     baseUrl: `${BACKEND_API_URL}/api/subscriptions`,
+
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
       if (token) {
@@ -14,13 +15,25 @@ export const subscriptionApi = createApi({
       return headers;
     },
   }),
+
   tagTypes: ["Subscription"],
   endpoints: (builder) => ({
     getMySubscription: builder.query({
       query: () => "/mine",
+
       providesTags: ["Subscription"],
+    }),
+
+    cancelSubscription: builder.mutation({
+      query: (subscriptionId) => ({
+        url: `/${subscriptionId}`,
+        method: "DELETE",
+      }),
+
+      invalidatesTags: ["Subscription"],
     }),
   }),
 });
 
-export const { useGetMySubscriptionQuery } = subscriptionApi;
+export const { useGetMySubscriptionQuery, useCancelSubscriptionMutation } =
+  subscriptionApi;

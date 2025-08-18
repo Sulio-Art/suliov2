@@ -8,12 +8,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
+import { useDispatch } from "react-redux";
+
+// --- RTK AND REDUX IMPORTS ---
+import {
+  useFinalizeRegistrationMutation,
+  useCompleteInstagramRegistrationMutation,
+} from "@/redux/auth/authApi";
+import { setCredentials } from "@/redux/auth/authSlice";
+
+// --- UI COMPONENT IMPORTS (Unchanged) ---
 import { Card } from "../../Components/ui/card";
 import StandardRegistrationForm from "../../Components/auth/register/StandardRegistrationForm";
 import { Loader2 } from "lucide-react";
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
-
+// --- SCHEMA (Unchanged) ---
 const passwordValidation = z
   .string()
   .min(8, "Password must be at least 8 characters long")
@@ -37,15 +46,19 @@ const baseSchema = z
 function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const dispatch = useDispatch();
 
-  const [flowType, setFlowType] = useState(null); 
-
+  const [flowType, setFlowType] = useState(null);
   const [completionToken, setCompletionToken] = useState(null);
-
   const [registrationToken, setRegistrationToken] = useState(null);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [userExistsError, setUserExistsError] = useState(false);
+
+  const [finalizeRegistration, { isLoading: isFinalizingStandard }] =
+    useFinalizeRegistrationMutation();
+  const [completeInstagramRegistration, { isLoading: isFinalizingInstagram }] =
+    useCompleteInstagramRegistrationMutation();
+
+  const isSubmitting = isFinalizingStandard || isFinalizingInstagram;
 
   const {
     handleSubmit,
@@ -76,7 +89,6 @@ function RegisterPageContent() {
       return;
     }
 
-    
     const igTokenFromStorage = sessionStorage.getItem("igCompletionToken");
     const igPrefillFromStorage = sessionStorage.getItem("igPrefillData");
 
@@ -93,11 +105,14 @@ function RegisterPageContent() {
     }
   }, [searchParams, setValue]);
 
-  const autoLogin = async (backendToken) => {
+  const autoLogin = async (backendToken, userData) => {
+    dispatch(setCredentials({ user: userData, backendToken }));
+
     const result = await signIn("credentials", {
       token: backendToken,
       redirect: false,
     });
+
     if (result?.error) {
       toast.error("Auto-login failed. Please log in manually.");
       router.push("/auth/login");
@@ -106,35 +121,23 @@ function RegisterPageContent() {
     }
   };
 
-  const handleFinalizeRegistration = async (data) => {
-    setIsSubmitting(true);
+  const handleFinalizeRegistration = async (formData) => {
     setUserExistsError(false);
-
-    let apiUrl;
-    let payload;
+    let registrationPromise;
 
     if (flowType === "standard") {
-      apiUrl = `${BACKEND_API_URL}/api/auth/register/finalize`;
-      payload = { ...data, registrationToken };
+      const payload = { ...formData, registrationToken };
+      registrationPromise = finalizeRegistration(payload).unwrap();
     } else if (flowType === "instagram") {
-      apiUrl = `${BACKEND_API_URL}/api/auth/instagram/complete-registration`;
-      payload = { ...data, completionToken };
+      const payload = { ...formData, completionToken };
+      registrationPromise = completeInstagramRegistration(payload).unwrap();
     } else {
       toast.error("Invalid registration flow.");
-      setIsSubmitting(false);
       return;
     }
 
     try {
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.message || "Registration failed.");
-      }
+      const result = await registrationPromise;
 
       if (flowType === "instagram") {
         sessionStorage.removeItem("igCompletionToken");
@@ -142,15 +145,16 @@ function RegisterPageContent() {
       }
 
       toast.success(result.message || "Registration successful!");
-      await autoLogin(result.token);
+
+      await autoLogin(result.token, result.user);
     } catch (err) {
-      if (err.message.includes("already exists")) {
+      const errorMessage =
+        err?.data?.message || "An unexpected error occurred.";
+      if (errorMessage.includes("already exists")) {
         setUserExistsError(true);
       } else {
-        toast.error(err.message);
+        toast.error(errorMessage);
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -199,7 +203,7 @@ function RegisterPageContent() {
             isSubmitting={isSubmitting}
             userExistsError={userExistsError}
             passwordValue={passwordValue}
-            isEmailVerified={flowType === "standard"} 
+            isEmailVerified={flowType === "standard"}
           />
         </form>
 

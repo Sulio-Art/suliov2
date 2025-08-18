@@ -1,5 +1,7 @@
 "use client";
 
+// TODO need to delete this file
+
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 

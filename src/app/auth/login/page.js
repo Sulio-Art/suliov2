@@ -8,6 +8,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Toaster, toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
+import { useDispatch } from "react-redux";
+import {
+  useLoginMutation,
+  useRequestPasswordResetMutation,
+  useVerifyPasswordResetOtpMutation,
+  useResetPasswordMutation,
+} from "@/redux/auth/authApi";
+import { setCredentials } from "@/redux/auth/authSlice";
 import { Button } from "../../Components/ui/button";
 import { Input } from "../../Components/ui/input";
 import { Label } from "../../Components/ui/label";
@@ -20,8 +28,6 @@ import {
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import PasswordStrengthIndicator from "../../Components/auth/register/PasswordStrengthIndicator";
 import OtpForm from "../../Components/auth/register/OtpForm";
-
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -49,17 +55,23 @@ const resetSchema = z
 
 function LoginPageContent() {
   const router = useRouter();
+  const dispatch = useDispatch();
+
   const [mode, setMode] = useState("login");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const [resetEmail, setResetEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetError, setResetError] = useState("");
-
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const [resetEmail, setResetEmail] = useState("");
+  const [verifiedOtp, setVerifiedOtp] = useState("");
+
+  const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+  const [requestOtp, { isLoading: isRequestingOtp }] =
+    useRequestPasswordResetMutation();
+  const [verifyOtp, { isLoading: isVerifyingOtp }] =
+    useVerifyPasswordResetOtpMutation();
+  const [resetPassword, { isLoading: isResettingPassword }] =
+    useResetPasswordMutation();
 
   const {
     handleSubmit,
@@ -69,7 +81,6 @@ function LoginPageContent() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
-
   const {
     control: otpControl,
     handleSubmit: handleOtpSubmit,
@@ -78,7 +89,6 @@ function LoginPageContent() {
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: "" },
   });
-
   const {
     control: resetControl,
     handleSubmit: handleResetSubmit,
@@ -89,95 +99,68 @@ function LoginPageContent() {
     defaultValues: { newPassword: "", confirmPassword: "" },
     mode: "onChange",
   });
-
   const newPasswordValue = watchReset("newPassword");
 
   const onLogin = async (data) => {
-    setIsSubmitting(true);
-    const result = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    });
-    setIsSubmitting(false);
-    if (result?.error) {
-      toast.error("Login failed. Please check your credentials.");
-    } else if (result?.ok) {
-      window.location.href = "/";
+    try {
+      const userData = await login(data).unwrap();
+      dispatch(
+        setCredentials({ user: userData.user, backendToken: userData.token })
+      );
+
+      const result = await signIn("credentials", {
+        token: userData.token,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error("Session could not be created. Please try again.");
+      } else if (result?.ok) {
+        window.location.href = "/";
+      }
+    } catch (err) {
+      toast.error(
+        err?.data?.message || "Login failed. Please check your credentials."
+      );
     }
   };
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
-    setResetLoading(true);
-    setResetError("");
     try {
-      const res = await fetch(
-        `${BACKEND_API_URL}/api/auth/request-password-reset`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: resetEmail }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      await requestOtp({ email: resetEmail }).unwrap();
       toast.success("OTP sent! Check your email.");
       setMode("reset-otp");
     } catch (err) {
-      setResetError(err.message);
-      toast.error(err.message);
+      toast.error(err?.data?.message || "Failed to send OTP.");
     }
-    setResetLoading(false);
   };
 
   const onVerifyOtp = async (data) => {
-    setResetLoading(true);
-    setResetError("");
     try {
-      const res = await fetch(
-        `${BACKEND_API_URL}/api/auth/verify-password-reset-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: resetEmail, otp: data.otp }),
-        }
-      );
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Invalid OTP");
-
-      setOtp(data.otp);
+      await verifyOtp({ email: resetEmail, otp: data.otp }).unwrap();
+      setVerifiedOtp(data.otp);
       setMode("reset-password");
       toast.success("OTP verified! You can now set your new password.");
     } catch (err) {
-      setResetError(err.message);
-      toast.error(err.message);
+      toast.error(err?.data?.message || "Invalid or expired OTP.");
     }
-    setResetLoading(false);
   };
 
   const onResetPassword = async (data) => {
-    setResetLoading(true);
-    setResetError("");
     try {
-      const res = await fetch(`${BACKEND_API_URL}/api/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: resetEmail,
-          otp,
-          newPassword: data.newPassword,
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message);
+      await resetPassword({
+        email: resetEmail,
+        otp: verifiedOtp,
+        newPassword: data.newPassword,
+      }).unwrap();
       toast.success("Password reset successfully! You can now log in.");
-      router.push("/auth/login");
+      setMode("login");
+      setResetEmail("");
+      setVerifiedOtp("");
     } catch (err) {
-      setResetError(err.message);
-      toast.error(err.message);
+      toast.error(err?.data?.message || "Failed to reset password.");
     }
-    setResetLoading(false);
   };
 
   if (mode === "login") {
@@ -248,8 +231,8 @@ function LoginPageContent() {
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
+            <Button type="submit" className="w-full" disabled={isLoginLoading}>
+              {isLoginLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing
                   in...
@@ -301,14 +284,11 @@ function LoginPageContent() {
                 required
               />
             </div>
-            {resetError && (
-              <p className="text-red-500 text-sm mt-1">{resetError}</p>
-            )}
-            <Button type="submit" className="w-full" disabled={resetLoading}>
-              {resetLoading && (
+            <Button type="submit" className="w-full" disabled={isRequestingOtp}>
+              {isRequestingOtp && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {resetLoading ? "Sending OTP..." : "Send OTP"}
+              {isRequestingOtp ? "Sending OTP..." : "Send OTP"}
             </Button>
             <div className="text-center mt-2">
               <button
@@ -337,11 +317,8 @@ function LoginPageContent() {
             <OtpForm
               control={otpControl}
               errors={otpErrors}
-              isSubmitting={resetLoading}
+              isSubmitting={isVerifyingOtp}
             />
-            {resetError && (
-              <p className="text-red-500 text-sm mt-1">{resetError}</p>
-            )}
             <div className="text-center mt-2">
               <button
                 type="button"
@@ -432,8 +409,12 @@ function LoginPageContent() {
                 </p>
               )}
             </div>
-            <Button disabled={resetLoading} type="submit" className="w-full">
-              {resetLoading && (
+            <Button
+              disabled={isResettingPassword}
+              type="submit"
+              className="w-full"
+            >
+              {isResettingPassword && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Reset Password

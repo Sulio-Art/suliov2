@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { planDetails } from "../Components/subscription/planDetails";
 import PricingCard from "./PricingCard";
 import { cn } from "@/lib/utils";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useGetMySubscriptionQuery } from "@/redux/Subscription/subscriptionApi";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -17,7 +17,10 @@ export default function PricingCardsSection() {
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [isLoading, setIsLoading] = useState(null);
 
-  const { status: subscriptionStatus, plan: currentPlan } = useSubscription();
+  const { data: subscription } = useGetMySubscriptionQuery();
+
+  const currentPlan = subscription?.plan;
+  const subscriptionStatus = subscription?.status;
 
   const isPostTrial = subscriptionStatus === "expired";
 
@@ -50,7 +53,7 @@ export default function PricingCardsSection() {
 
     try {
       const orderResponse = await fetch(
-        `${BACKEND_API_URL}/api/subscriptions/create`,
+        `${BACKEND_API_URL}/api/transactions/create-order`,
         {
           method: "POST",
           headers: {
@@ -84,7 +87,7 @@ export default function PricingCardsSection() {
           order_id: orderData.orderId,
           handler: async (response) => {
             const verifyResponse = await fetch(
-              `${BACKEND_API_URL}/api/subscriptions/verify`,
+              `${BACKEND_API_URL}/api/transactions/verify-payment`,
               {
                 method: "POST",
                 headers: {
