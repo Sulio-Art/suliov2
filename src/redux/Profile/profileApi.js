@@ -5,7 +5,8 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const profileApi = createApi({
   reducerPath: "profileApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${BACKEND_API_URL}/profiles`, 
+    // CORRECT: The baseUrl now correctly and consistently points to the API root.
+    baseUrl: `${BACKEND_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
       if (token) {
@@ -17,13 +18,15 @@ export const profileApi = createApi({
   tagTypes: ["Profile"],
   endpoints: (builder) => ({
     getMyProfile: builder.query({
-      query: () => "/me",
+      // CORRECT: The URL is now relative to /api
+      query: () => "/profiles/me",
       providesTags: ["Profile"],
     }),
     updateMyProfile: builder.mutation({
       query: (formData) => {
         return {
-          url: "/me",
+          // CORRECT: The URL is now relative to /api
+          url: "/profiles/me",
           method: "PUT",
           body: formData,
         };

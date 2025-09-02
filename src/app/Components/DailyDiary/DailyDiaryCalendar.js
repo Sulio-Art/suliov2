@@ -49,6 +49,8 @@ import {
   useGetMyDiaryEntriesQuery,
   useDeleteDiaryEntryMutation,
 } from "../../../redux/Diary/diaryApi";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 import CalendarSkeleton from "./CalendarSkeleton";
 
 const DiaryDetailCard = ({ entry, onEdit, onDelete }) => (
@@ -109,7 +111,11 @@ const DiaryTag = ({ category, subject }) => (
 );
 
 export default function DailyDiaryCalendar() {
-  const { data: diaryEntries = [], isLoading } = useGetMyDiaryEntriesQuery();
+  const token = useSelector(selectBackendToken);
+  const { data: diaryEntries = [], isLoading } = useGetMyDiaryEntriesQuery(
+    undefined,
+    { skip: !token }
+  );
   const [deleteDiaryEntry, { isLoading: isDeleting }] =
     useDeleteDiaryEntryMutation();
 

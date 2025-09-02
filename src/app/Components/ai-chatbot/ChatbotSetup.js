@@ -1,274 +1,153 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
 import { useSubscription } from "@/hooks/useSubscription";
 import toast from "react-hot-toast";
-import { Send, Loader2, Lock } from "lucide-react";
-import { Input } from "../ui/input";
+import { Loader2, Lock } from "lucide-react";
+import { Textarea } from "../ui/textarea";
+// --- IMPORTS FOR SKIPPING QUERY ---
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
+import {
+  useGetChatbotSettingsQuery,
+  useUpdateChatbotSettingsMutation,
+} from "@/redux/Chatbot/chatbotApi";
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
-
+// --- (STEP_PERMISSIONS remains the same) ---
 const STEP_PERMISSIONS = {
   free: ["Setup Greetings", "Setup Artist"],
   plus: ["Setup Greetings", "Setup Artist", "Setup Damage"],
   premium: [
-    "Setup Greetings",
-    "Setup Artist",
-    "Setup Damage",
-    "Setup Invitation Co-operation",
-    "Setup Comission",
+    "Setup Greetings", "Setup Artist", "Setup Damage",
+    "Setup Invitation Co-operation", "Setup Comission",
   ],
   pro: [
-    "Setup Greetings",
-    "Setup Artist",
-    "Setup Damage",
-    "Setup Invitation Co-operation",
-    "Setup Comission",
-    "Return Artwork",
+    "Setup Greetings", "Setup Artist", "Setup Damage",
+    "Setup Invitation Co-operation", "Setup Comission", "Return Artwork",
   ],
 };
 
 export default function ChatbotSetup({ activeStep }) {
-  const { data: session } = useSession();
   const { plan: userPlan, hasAccess } = useSubscription();
-  const messagesEndRef = useRef(null);
-  const chatContainerRef = useRef(null);
+  
+  // --- GET TOKEN FROM REDUX STORE ---
+  const token = useSelector(selectBackendToken);
 
+  // --- RTK Query Hooks ---
+  // CORRECT: Added the skip option to prevent this query from running without a token.
+  const { data: profile, isLoading: isSettingsLoading } = useGetChatbotSettingsQuery(
+    undefined, 
+    { skip: !token }
+  );
+  
+  const [updateChatbotSettings, { isLoading: isUpdating }] = useUpdateChatbotSettingsMutation();
+  const chatbotSettings = profile?.chatbotSettings || {};
+  
+  // --- Local State ---
+  const [userInput, setUserInput] = useState("");
+  const debounceTimeout = useRef(null);
+
+  // --- Plan/Permission Logic (Unchanged) ---
   const isChatbotFeatureActive = hasAccess("aiChatbot");
   const isStepIncludedInPlan = STEP_PERMISSIONS[userPlan]?.includes(activeStep);
   const isStepAllowed = isChatbotFeatureActive && isStepIncludedInPlan;
-
-  const [userInput, setUserInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [allSettings, setAllSettings] = useState({});
-  const [currentSavedPrompt, setCurrentSavedPrompt] = useState("");
-  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
-  const [messages, setMessages] = useState([]);
-
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
+  
+  // Effect to populate the textarea when the active step or settings change
   useEffect(() => {
-    const fetchSettings = async () => {
-      if (!session) return;
-      setIsSettingsLoading(true);
-      try {
-        const response = await fetch(`${BACKEND_API_URL}/profiles/me`, {
-          headers: { Authorization: `Bearer ${session.backendToken}` },
-        });
-
-        if (!response.ok) throw new Error("Could not fetch settings.");
-        const profile = await response.json();
-
-        setAllSettings(profile.chatbotSettings || {});
-      } catch (err) {
-        toast.error(err.message);
-      } finally {
-        setIsSettingsLoading(false);
-      }
-    };
-    fetchSettings();
-  }, [session]);
-
-  useEffect(() => {
-    if (!isSettingsLoading) {
+    // This now safely runs only after the profile has been successfully fetched.
+    if (profile) {
       const settingKey = activeStep.toLowerCase().replace(/\s+/g, "-");
-      const savedPromptForCurrentStep = allSettings[settingKey] || "";
-      setCurrentSavedPrompt(savedPromptForCurrentStep);
-      setUserInput(savedPromptForCurrentStep);
-
-      if (savedPromptForCurrentStep) {
-        setMessages([
-          {
-            type: "system",
-            content: `Current setting for "${activeStep}": ${savedPromptForCurrentStep}`,
-            timestamp: new Date(),
-          },
-        ]);
-      } else {
-        setMessages([]);
-      }
+      setUserInput(chatbotSettings[settingKey] || "");
     }
-  }, [activeStep, allSettings, isSettingsLoading]);
+  }, [activeStep, profile, chatbotSettings]);
 
+  // Effect to handle auto-saving with debounce
   useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [messages]);
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!isStepAllowed || isLoading || !session || !userInput.trim()) return;
-
-    const userMessage = {
-      type: "user",
-      content: userInput,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-
-    setIsLoading(true);
-    const currentInput = userInput;
-    setUserInput(""); 
-
-    try {
-      const response = await fetch(`${BACKEND_API_URL}/api/chat/settings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.backendToken}`,
-        },
-        body: JSON.stringify({
-          setting: activeStep,
-          value: currentInput,
-        }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to save the setting.");
-      }
-
-      const successMessage = {
-        type: "system",
-        content: `✅ Setting saved successfully for "${activeStep}"`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, successMessage]);
-
-      toast.success(result.message);
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+    
+    debounceTimeout.current = setTimeout(async () => {
+      // Don't try to save if there's no token or profile data
+      if (!token || !profile) return;
 
       const settingKey = activeStep.toLowerCase().replace(/\s+/g, "-");
-      setAllSettings((prevSettings) => ({
-        ...prevSettings,
-        [settingKey]: currentInput,
-      }));
-      setCurrentSavedPrompt(currentInput);
-    } catch (err) {
-      const errorMessage = {
-        type: "system",
-        content: `❌ Error: ${err.message || "An error occurred while saving."}`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      const savedValue = chatbotSettings[settingKey] || "";
 
-      toast.error(err.message || "An error occurred while saving.");
-      setUserInput(currentInput); 
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (userInput !== savedValue) {
+        const newSettings = {
+          ...chatbotSettings,
+          [settingKey]: userInput,
+        };
+        try {
+          await updateChatbotSettings(newSettings).unwrap();
+          toast.success(`"${activeStep}" settings saved!`, {
+            id: 'save-toast',
+          });
+        } catch (err) {
+          toast.error("Failed to save settings.");
+        }
+      }
+    }, 1000);
 
-  return (
-    <div className="relative h-full w-full" style={{ minHeight: "60vh" }}>
-      <div
-        ref={chatContainerRef}
-        className="absolute top-0 left-0 right-0 bottom-20 overflow-y-auto p-4 space-y-4 bg-gray-50"
-      >
-        {!isStepAllowed && (
-          <div className="flex justify-center">
-            <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4 max-w-md text-center">
-              <Lock className="h-6 w-6 mx-auto mb-2 text-yellow-600" />
-              <p className="text-yellow-800 font-medium">Upgrade Required</p>
-              <p className="text-yellow-700 text-sm mt-1">
-                Upgrade your plan to configure "{activeStep}" feature.
-              </p>
-            </div>
-          </div>
-        )}
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [userInput, activeStep, chatbotSettings, updateChatbotSettings, token, profile]);
 
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              message.type === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                message.type === "user"
-                  ? "bg-blue-600 text-white rounded-br-md"
-                  : "bg-white border shadow-sm rounded-bl-md"
-              }`}
-            >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              <p
-                className={`text-xs mt-1 ${
-                  message.type === "user" ? "text-blue-100" : "text-gray-500"
-                }`}
-              >
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            </div>
-          </div>
-        ))}
 
-        {messages.length === 0 && isStepAllowed && (
-          <div className="flex justify-center items-center h-full">
-            <div className="text-center text-gray-500">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
-                <Send className="h-8 w-8 text-gray-400" />
-              </div>
-              <p className="text-lg font-medium mb-2">
-                Configure "{activeStep}"
-              </p>
-              <p className="text-sm max-w-md">
-                Enter your instructions below to set up this step. This will
-                help the AI understand how to handle this part of the
-                conversation.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
+  // isSettingsLoading will now correctly be true until the token exists AND the data is fetched.
+  if (isSettingsLoading) {
+    return (
+      <div className="flex items-center justify-center flex-1">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 border-t bg-white p-4">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+    );
+  }
+  
+  return (
+    <div className="flex flex-col flex-1 p-6">
+      {!isStepAllowed ? (
+        <div className="flex justify-center items-center h-full">
+          <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-6 max-w-md text-center">
+            <Lock className="h-8 w-8 mx-auto mb-3 text-yellow-600" />
+            <p className="text-yellow-800 font-semibold text-lg">
+              Upgrade Required
+            </p>
+            <p className="text-yellow-700 text-sm mt-2">
+              Upgrade your plan to configure the "{activeStep}" feature.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex-shrink-0 mb-4">
+            <h3 className="text-lg font-semibold mb-1">
+              Configure "{activeStep}"
+            </h3>
+            <p className="text-sm text-gray-600">
+              Enter your instructions below. This will help the AI understand
+              how to handle this part of the conversation. Changes are saved automatically.
+            </p>
+          </div>
           <div className="relative flex-1">
-            <Input
-              type="text"
-              placeholder={
-                isStepAllowed
-                  ? `Write your instructions for "${activeStep}"...`
-                  : "Upgrade your plan to configure this feature."
-              }
+            <Textarea
+              placeholder={`Write your instructions for "${activeStep}"...`}
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              disabled={isLoading || !isStepAllowed}
-              autoComplete="off"
-              className="h-12 text-base pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              disabled={isUpdating || !isStepAllowed}
+              className="w-full h-full text-base resize-none border-gray-200 focus:border-blue-500 focus:ring-blue-500"
             />
-            {!isStepAllowed && (
-              <div className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400">
-                <Lock className="h-5 w-5" />
+            {isUpdating && (
+              <div className="absolute bottom-4 right-4 text-gray-500 flex items-center gap-2 text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
               </div>
             )}
           </div>
-          <button
-            type="submit"
-            disabled={isLoading || !isStepAllowed || !userInput.trim()}
-            className="h-12 w-12 flex-shrink-0 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </button>
-        </form>
-      </div>
+        </>
+      )}
     </div>
   );
 }
-
-

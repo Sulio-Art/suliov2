@@ -9,6 +9,8 @@ import { Loader2, ArrowLeft, Calendar, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
 const DetailSection = ({ title, content }) => {
   if (!content) {
@@ -28,9 +30,17 @@ const ArtworkDetailPage = () => {
   const params = useParams();
   const { userId, artworkId } = params;
 
+  const token = useSelector(selectBackendToken);
+
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: artwork, isLoading, error } = useGetArtworkByIdQuery(artworkId);
+  const {
+    data: artwork,
+    isLoading,
+    error,
+  } = useGetArtworkByIdQuery(artworkId, {
+    skip: !token,
+  });
   const [deleteArtwork] = useDeleteArtworkMutation();
 
   const handleDelete = async () => {
@@ -129,7 +139,6 @@ const ArtworkDetailPage = () => {
           <div className="space-y-6">
             <DetailSection title="Description" content={artwork.description} />
 
-          
             <DetailSection
               title="Creative Insights"
               content={artwork.creativeInsights}
@@ -138,7 +147,6 @@ const ArtworkDetailPage = () => {
               title="Technical Issues"
               content={artwork.technicalIssues}
             />
-           
           </div>
         </main>
       </div>

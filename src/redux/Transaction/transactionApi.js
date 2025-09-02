@@ -5,8 +5,8 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const transactionApi = createApi({
   reducerPath: "transactionApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${BACKEND_API_URL}/api/transactions`,
-
+    // CORRECT: The baseUrl now correctly and consistently points to the API root.
+    baseUrl: `${BACKEND_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
       if (token) {
@@ -22,7 +22,8 @@ export const transactionApi = createApi({
         const params = new URLSearchParams({ page });
         if (search) params.append("search", search);
         if (status) params.append("status", status);
-        return `/me?${params.toString()}`;
+        // CORRECT: The URL is now relative to /api
+        return `/transactions/me?${params.toString()}`;
       },
     }),
   }),

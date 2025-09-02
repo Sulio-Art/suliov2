@@ -5,8 +5,8 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const subscriptionApi = createApi({
   reducerPath: "subscriptionApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${BACKEND_API_URL}/api/subscriptions`,
-
+    // CORRECT: The baseUrl now correctly and consistently points to the API root.
+    baseUrl: `${BACKEND_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
       if (token) {
@@ -15,21 +15,20 @@ export const subscriptionApi = createApi({
       return headers;
     },
   }),
-
   tagTypes: ["Subscription"],
   endpoints: (builder) => ({
     getMySubscription: builder.query({
-      query: () => "/mine",
-
+      // CORRECT: The URL is now relative to /api, so we query '/subscriptions/mine'
+      query: () => "/subscriptions/mine",
       providesTags: ["Subscription"],
     }),
 
     cancelSubscription: builder.mutation({
       query: (subscriptionId) => ({
-        url: `/${subscriptionId}`,
+        // CORRECT: This is now relative to /api
+        url: `/subscriptions/${subscriptionId}`,
         method: "DELETE",
       }),
-
       invalidatesTags: ["Subscription"],
     }),
   }),

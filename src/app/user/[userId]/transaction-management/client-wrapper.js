@@ -15,7 +15,9 @@ import TransactionsTable from "../../../Components/transaction-management/Transa
 import PaginationControls from "../../../Components/Reuseable/PaginationControls";
 import UpgradePlanPrompt from "../../../Components/Reuseable/UpgradePlanprompt.js";
 
-// Import the new RTK Query hook
+// FIX: Import useSelector and the token selector
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 import { useGetMyTransactionsQuery } from "@/redux/Transaction/transactionApi";
 
 export default function ClientWrapper() {
@@ -23,33 +25,33 @@ export default function ClientWrapper() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Get state directly from the URL's search parameters for synchronization
+  // FIX: Get the authentication token from the Redux store
+  const token = useSelector(selectBackendToken);
+
   const page = parseInt(searchParams.get("page") || "1", 10);
   const search = searchParams.get("search") || "";
   const status = searchParams.get("status") || "";
 
-  // Local state for controlled inputs (e.g., the search bar text)
   const [searchTerm, setSearchTerm] = useState(search);
   const [statusFilter, setStatusFilter] = useState(status);
 
-  // Call the RTK Query hook. It handles all fetching, loading, and error states.
-  // The hook will automatically re-fetch data whenever page, search, or status changes.
   const {
-    data, // Contains the API response: { transactions, totalPages, currentPage }
+    data,
     isLoading,
     isError,
-    error, // Contains error details, including status code
-  } = useGetMyTransactionsQuery({ page, search, status });
+    error,
+  } = useGetMyTransactionsQuery(
+    { page, search, status },
+    // FIX: Add the skip option. The query will not run if there is no token.
+    { skip: !token }
+  );
 
-  // Check for the specific 403 Forbidden error from the hook's result
   const isForbidden = error?.status === 403;
 
-  // This useEffect updates the URL when the user types in the search box or changes the filter.
-  // The change in the URL's search params will trigger the RTK Query hook to re-fetch automatically.
   useEffect(() => {
     const handler = setTimeout(() => {
       const params = new URLSearchParams(searchParams);
-      params.set("page", "1"); // Reset to page 1 on any new filter or search
+      params.set("page", "1");
 
       if (searchTerm) {
         params.set("search", searchTerm);
@@ -64,25 +66,21 @@ export default function ClientWrapper() {
       }
 
       router.push(`${pathname}?${params.toString()}`);
-    }, 500); // Debounce to avoid firing on every keystroke
+    }, 500);
 
     return () => clearTimeout(handler);
   }, [searchTerm, statusFilter, pathname, router]);
 
-  // Handler for the pagination component to change the page number in the URL
   const handlePageChange = (newPage) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", newPage.toString());
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  // Handler for the status filter dropdown
   const handleStatusChange = (value) => {
-    // Setting the state will trigger the useEffect above to update the URL
     setStatusFilter(value === "all" ? "" : value);
   };
 
-  // Render the "Upgrade Plan" prompt if the API returned a 403 Forbidden error
   if (isForbidden) {
     return <UpgradePlanPrompt featureName="Transaction and sales tracking" />;
   }
@@ -119,7 +117,7 @@ export default function ClientWrapper() {
           </div>
         </div>
 
-        {/* Conditionally render a loading spinner or the table with data */}
+        {/* This logic now works correctly. When the query is skipped, isLoading is false and data is undefined, showing an empty table briefly. */}
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />

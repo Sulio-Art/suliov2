@@ -10,12 +10,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials(state, action) {
-      const { user, backendToken } = action.payload;
+      // --- THE FIX IS HERE ---
+      // Changed `backendToken` to `token` to match the API response.
+      const { user, token } = action.payload;
+      
       if (user) {
         state.userInfo = user;
       }
-      if (backendToken) {
-        state.token = backendToken;
+      if (token) {
+        state.token = token;
       }
     },
     clearCredentials(state) {

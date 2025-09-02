@@ -11,6 +11,9 @@ import {
   useGetEventsQuery,
   useDeleteEventMutation,
 } from "@/redux/Event/eventApi";
+// --- ADD THESE IMPORTS ---
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
 const NoDataPlaceholder = ({ message }) => (
   <div className="flex flex-col items-center justify-center text-center py-12 border-2 border-dashed rounded-lg text-gray-500 bg-gray-50/50">
@@ -35,7 +38,16 @@ export default function ClientWrapper() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  const { data: eventData, isLoading, isError, error } = useGetEventsQuery();
+  // --- ADD THIS LINE to get the token ---
+  const token = useSelector(selectBackendToken);
+
+  // --- UPDATE THIS HOOK with the `skip` option ---
+  const {
+    data: eventData,
+    isLoading,
+    isError,
+    error,
+  } = useGetEventsQuery(undefined, { skip: !token });
 
   const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
 
@@ -47,6 +59,7 @@ export default function ClientWrapper() {
     });
   };
 
+  // --- The rest of the component remains the same ---
   if (isLoading) {
     return (
       <div className="flex-1 p-8 bg-gray-50 flex items-center justify-center">

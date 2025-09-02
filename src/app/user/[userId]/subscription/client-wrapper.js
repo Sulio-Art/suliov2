@@ -1,18 +1,32 @@
 "use client";
 
+// --- Imports for auth token ---
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
+
 import { useGetMySubscriptionQuery } from "@/redux/Subscription/subscriptionApi";
 import SubscriptionDetails from "../../../Components/subscription/SubscriptionDetails";
 import NoSubscription from "../../../Components/subscription/NoSubscription";
 import { Loader2 } from "lucide-react";
 
 export default function ClientWrapper() {
+  // --- Get the token from the Redux store ---
+  const token = useSelector(selectBackendToken);
+
   const {
     data: subscription,
     isLoading,
     isError,
     error,
-  } = useGetMySubscriptionQuery();
+  } = useGetMySubscriptionQuery(
+    undefined,
+    // --- Pass the skip option to the hook ---
+    // This query will not run until the token exists.
+    { skip: !token }
+  );
 
+  // The isLoading state will now only be true when the token exists AND
+  // the network request is actually in flight.
   if (isLoading) {
     return (
       <div className="flex-1 p-4 md:p-8 bg-gray-50">

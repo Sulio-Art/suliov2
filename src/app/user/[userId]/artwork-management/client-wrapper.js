@@ -20,6 +20,7 @@ import { Button } from "../../../Components/ui/button";
 import PaginationControls from "../../../Components/Reuseable/PaginationControls";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
 const FilterPopover = ({ isOpen, onClose, onApply, initialFilters }) => {
   const [filters, setFilters] = useState(initialFilters);
@@ -243,7 +244,7 @@ export function ArtworkClientWrapper({ userId, initialData }) {
   });
 
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
-  const { token: authToken } = useSelector((state) => state.auth);
+  const authToken = useSelector(selectBackendToken);
 
   const queryParams = {
     page: currentPage,

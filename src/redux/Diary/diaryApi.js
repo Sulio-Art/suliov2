@@ -5,7 +5,8 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const diaryApi = createApi({
   reducerPath: "diaryApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${BACKEND_API_URL}/api/diary`,
+    // CORRECT: The baseUrl now correctly and consistently points to the API root.
+    baseUrl: `${BACKEND_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
       if (token) {
@@ -17,19 +18,22 @@ export const diaryApi = createApi({
   tagTypes: ["Diary"],
   endpoints: (builder) => ({
     getMyDiaryEntries: builder.query({
-      query: () => "/",
+      // CORRECT: The URL is now relative to /api
+      query: () => "/diary",
       providesTags: (result = []) => [
         { type: "Diary", id: "LIST" },
         ...result.map(({ _id }) => ({ type: "Diary", id: _id })),
       ],
     }),
     getDiaryEntryById: builder.query({
-      query: (id) => `/${id}`,
+      // CORRECT: The URL is now relative to /api
+      query: (id) => `/diary/${id}`,
       providesTags: (result, error, id) => [{ type: "Diary", id }],
     }),
     createDiaryEntry: builder.mutation({
       query: (formData) => ({
-        url: "/",
+        // CORRECT: The URL is now relative to /api
+        url: "/diary",
         method: "POST",
         body: formData,
       }),
@@ -37,7 +41,8 @@ export const diaryApi = createApi({
     }),
     updateDiaryEntry: builder.mutation({
       query: ({ id, formData }) => ({
-        url: `/${id}`,
+        // CORRECT: The URL is now relative to /api
+        url: `/diary/${id}`,
         method: "PUT",
         body: formData,
       }),
@@ -48,7 +53,8 @@ export const diaryApi = createApi({
     }),
     deleteDiaryEntry: builder.mutation({
       query: (id) => ({
-        url: `/${id}`,
+        // CORRECT: The URL is now relative to /api
+        url: `/diary/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [{ type: "Diary", id: "LIST" }],

@@ -36,6 +36,8 @@ import {
   useCreateDiaryEntryMutation,
   useUpdateDiaryEntryMutation,
 } from "../../../redux/Diary/diaryApi";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
 const diaryFormSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
@@ -57,13 +59,16 @@ export default function NewDiaryForm() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+  const token = useSelector(selectBackendToken);
 
   const entryId = params.entryId;
   const isEditMode = !!entryId;
   const preselectedDate = searchParams.get("date");
 
   const { data: entryData, isLoading: isFetchingEntry } =
-    useGetDiaryEntryByIdQuery(entryId, { skip: !isEditMode });
+    useGetDiaryEntryByIdQuery(entryId, {
+      skip: !isEditMode || !token,
+    });
 
   const [createDiaryEntry, { isLoading: isCreating }] =
     useCreateDiaryEntryMutation();
@@ -104,7 +109,6 @@ export default function NewDiaryForm() {
   }, [watchedValues, storageKey]);
 
   useEffect(() => {
-    
     if (!toastShownRef.current) {
       const savedDraft = localStorage.getItem(storageKey);
       if (savedDraft) {

@@ -1,45 +1,25 @@
 "use client";
 
-import { SessionProvider, useSession } from "next-auth/react";
-import {
-  Provider as ReduxProvider,
-  useDispatch,
-  useSelector,
-} from "react-redux";
-import { store } from "@/redux/store";
-import { useEffect } from "react";
-import { setCredentials, selectBackendToken } from "@/redux/auth/authSlice";
+import { SessionProvider } from "next-auth/react";
+import { Provider as ReduxProvider } from "react-redux";
+import { store, persistor } from "@/redux/store";
+import { PersistGate } from "redux-persist/integration/react";
+import { Loader2 } from "lucide-react";
 
-const AuthSync = ({ children }) => {
-  const { data: session, status } = useSession();
-  const dispatch = useDispatch();
-
-  const tokenInStore = useSelector(selectBackendToken);
-
-  useEffect(() => {
-    if (
-      status === "authenticated" &&
-      session?.backendToken &&
-      session.backendToken !== tokenInStore
-    ) {
-      console.log("[AuthSync] Session token detected. Syncing to Redux store.");
-      dispatch(
-        setCredentials({
-          user: session.user,
-          backendToken: session.backendToken,
-        })
-      );
-    }
-  }, [status, session, dispatch, tokenInStore]);
-
-  return <>{children}</>;
-};
+// A simple loading component to show while the store is rehydrating from storage.
+const ReduxLoading = () => (
+  <div className="flex h-screen w-full items-center justify-center">
+    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+  </div>
+);
 
 export function Providers({ children }) {
   return (
     <SessionProvider>
       <ReduxProvider store={store}>
-        <AuthSync>{children}</AuthSync>
+        <PersistGate loading={<ReduxLoading />} persistor={persistor}>
+          {children}
+        </PersistGate>
       </ReduxProvider>
     </SessionProvider>
   );

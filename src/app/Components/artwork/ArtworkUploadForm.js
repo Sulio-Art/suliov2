@@ -13,6 +13,8 @@ import toast from "react-hot-toast";
 import { Button } from "../../Components/ui/button";
 import { Input } from "../../Components/ui/input";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
 const FormInput = ({ label, children }) => (
   <div>
@@ -61,6 +63,7 @@ const StorageIndicator = ({ currentUsage = 0, storageLimit = 0 }) => {
 export const ArtworkUploadForm = ({ userId, initialData = null }) => {
   const router = useRouter();
   const isEditMode = initialData !== null;
+  const token = useSelector(selectBackendToken);
 
   const [title, setTitle] = useState("");
   const [artworkType, setArtworkType] = useState("");
@@ -77,10 +80,14 @@ export const ArtworkUploadForm = ({ userId, initialData = null }) => {
   const [createArtwork, { isLoading: isCreating }] = useCreateArtworkMutation();
   const [updateArtwork, { isLoading: isUpdating }] = useUpdateArtworkMutation();
   const { data: storageStats, isLoading: isLoadingStats } =
-    useGetStorageStatsQuery();
+    useGetStorageStatsQuery(undefined, {
+      skip: !token,
+    });
 
   const { data: subscriptionData, isLoading: isLoadingSubscription } =
-    useGetMySubscriptionQuery();
+    useGetMySubscriptionQuery(undefined, {
+      skip: !token,
+    });
 
   const subscriptionStatus = subscriptionData?.status;
   const entitlements = subscriptionData?.entitlements;

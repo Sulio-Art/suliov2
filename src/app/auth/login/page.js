@@ -101,29 +101,32 @@ function LoginPageContent() {
   });
   const newPasswordValue = watchReset("newPassword");
 
-  const onLogin = async (data) => {
-    try {
-      const userData = await login(data).unwrap();
-      dispatch(
-        setCredentials({ user: userData.user, backendToken: userData.token })
-      );
+ const onLogin = async (data) => {
+  try {
+    const userData = await login(data).unwrap();
+    console.log("Data received from backend login:", userData); 
+    dispatch(
 
-      const result = await signIn("credentials", {
-        token: userData.token,
-        redirect: false,
-      });
+      setCredentials({ user: userData.user, backendToken: userData.backendToken })
+    );
 
-      if (result?.error) {
-        toast.error("Session could not be created. Please try again.");
-      } else if (result?.ok) {
-        window.location.href = "/";
-      }
-    } catch (err) {
-      toast.error(
-        err?.data?.message || "Login failed. Please check your credentials."
-      );
+    const result = await signIn("credentials", {
+     
+      token: userData.backendToken,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      toast.error("Session could not be created. Please try again.");
+    } else if (result?.ok) {
+      window.location.href = "/";
     }
-  };
+  } catch (err) {
+    toast.error(
+      err?.data?.message || "Login failed. Please check your credentials."
+    );
+  }
+};
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();

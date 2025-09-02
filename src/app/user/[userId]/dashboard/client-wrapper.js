@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSelector } from "react-redux";
 import {
   Users,
   MessageCircle,
@@ -17,6 +17,7 @@ import {
   useGetOnboardingStatusQuery,
   useGetDashboardStatsQuery,
 } from "@/redux/Dashboard/dashboardApi";
+import { selectBackendToken, selectCurrentUser } from "@/redux/auth/authSlice";
 
 const DashboardSkeleton = () => (
   <div className="p-4 md:p-8 bg-gray-50 min-h-screen flex flex-col gap-8 animate-pulse">
@@ -73,18 +74,25 @@ const FullDashboard = ({ dashboardData, userId }) => (
 );
 
 export default function ClientWrapper() {
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
+  // CORRECT: Get the authentication token from the Redux store.
+  const token = useSelector(selectBackendToken);
+  // CORRECT: Get the user object from the Redux store for consistency.
+  const user = useSelector(selectCurrentUser);
+  const userId = user?._id;
 
+  // CORRECT: Add the `skip: !token` option. This query will not run until the token exists.
   const { data: onboardingStatus, isLoading: isOnboardingLoading } =
-    useGetOnboardingStatusQuery();
+    useGetOnboardingStatusQuery(undefined, { skip: !token });
 
   const isOnboardingComplete =
     onboardingStatus?.hasUploadedArtwork &&
     onboardingStatus?.isChatbotConfigured;
 
+  // CORRECT: Add the `!token` check to the skip condition. This query now waits for both the token AND onboarding completion.
   const { data: dashboardData, isLoading: isStatsLoading } =
-    useGetDashboardStatsQuery(undefined, { skip: !isOnboardingComplete });
+    useGetDashboardStatsQuery(undefined, {
+      skip: !token || !isOnboardingComplete,
+    });
 
   const isLoading =
     isOnboardingLoading || (isOnboardingComplete && isStatsLoading);

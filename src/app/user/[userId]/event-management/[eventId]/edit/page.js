@@ -4,17 +4,24 @@ import { useParams } from "next/navigation";
 import CreateEventForm from "../../../../../Components/event-management/CreateEventForm";
 import { Loader2 } from "lucide-react";
 import { useGetEventByIdQuery } from "@/redux/Event/eventApi";
+// --- ADD THESE IMPORTS ---
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
 export default function EditEventPage() {
   const params = useParams();
   const { eventId } = params;
 
+  // --- ADD THIS LINE to get the token ---
+  const token = useSelector(selectBackendToken);
+
+  // --- UPDATE THIS HOOK with the `skip` option ---
   const {
     data: eventData,
     isLoading,
     isError,
     error,
-  } = useGetEventByIdQuery(eventId);
+  } = useGetEventByIdQuery(eventId, { skip: !token || !eventId });
 
   if (isLoading) {
     return (

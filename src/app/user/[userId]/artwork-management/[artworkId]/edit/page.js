@@ -4,12 +4,22 @@ import { useParams } from "next/navigation";
 import { useGetArtworkByIdQuery } from "@/redux/Artwork/artworkApi";
 import { Loader2 } from "lucide-react";
 import { ArtworkUploadForm } from "../../../../../Components/artwork/ArtworkUploadForm";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
 const EditArtworkPage = () => {
   const params = useParams();
   const { userId, artworkId } = params;
 
-  const { data: artwork, isLoading, error } = useGetArtworkByIdQuery(artworkId);
+  const token = useSelector(selectBackendToken);
+
+  const {
+    data: artwork,
+    isLoading,
+    error,
+  } = useGetArtworkByIdQuery(artworkId, {
+    skip: !token,
+  });
 
   if (isLoading) {
     return (

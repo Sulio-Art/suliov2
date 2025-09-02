@@ -5,7 +5,8 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const dashboardApi = createApi({
   reducerPath: "dashboardApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${BACKEND_API_URL}/api/dashboard`,
+    // CORRECT: The baseUrl now correctly and consistently points to the API root.
+    baseUrl: `${BACKEND_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
       if (token) {
@@ -16,22 +17,14 @@ export const dashboardApi = createApi({
   }),
   tagTypes: ["Onboarding", "DashboardStats"],
   endpoints: (builder) => ({
-    /**
-     * @query getOnboardingStatus
-     * @desc Fetches the user's onboarding completion status.
-     *       This is a critical first step to determine what the dashboard should show.
-     */
     getOnboardingStatus: builder.query({
-      query: () => "/onboarding-status",
+      // CORRECT: The URL is now relative to /api
+      query: () => "/dashboard/onboarding-status",
       providesTags: ["Onboarding"],
     }),
-    /**
-     * @query getDashboardStats
-     * @desc Fetches all the main statistics for the dashboard display.
-     *       This query depends on the onboarding status being complete.
-     */
     getDashboardStats: builder.query({
-      query: () => "/stats",
+      // CORRECT: The URL is now relative to /api
+      query: () => "/dashboard/stats",
       providesTags: ["DashboardStats"],
     }),
   }),

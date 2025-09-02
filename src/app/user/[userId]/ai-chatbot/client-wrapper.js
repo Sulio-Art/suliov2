@@ -36,7 +36,7 @@ export default function ClientWrapper() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm flex-1 min-h-0 flex flex-col w-full">
-        {/* Tab Headers */}
+        
         <div className="flex border-b flex-shrink-0">
           <button
             type="button"
@@ -68,7 +68,7 @@ export default function ClientWrapper() {
           {activeTab === "setup" ? (
             <ChatbotSetup activeStep={activeStep} />
           ) : (
-            <ChatbotTest />
+            <ChatbotTest activeStep={activeStep} /> 
           )}
         </div>
       </div>
