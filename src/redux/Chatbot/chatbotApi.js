@@ -14,19 +14,19 @@ export const chatbotApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["ChatbotSettings"],
+  tagTypes: ["ChatbotSettings", "Profile"], 
   endpoints: (builder) => ({
     getChatbotSettings: builder.query({
       query: () => "/profiles/me",
-      providesTags: ["ChatbotSettings"],
+      providesTags: ["Profile", "ChatbotSettings"],
       transformResponse: (response) => {
-        if (response && response.chatbotSettings) {
+        if (response) {
           return {
             ...response,
-            chatbotSettings: Object.fromEntries(response.chatbotSettings),
+            chatbotSettings: response.chatbotSettings || {},
           };
         }
-        return response || {};
+        return { chatbotSettings: {} };
       },
     }),
 
@@ -36,7 +36,7 @@ export const chatbotApi = createApi({
         method: "PATCH",
         body: chatbotSettings,
       }),
-      invalidatesTags: ["ChatbotSettings"],
+      invalidatesTags: ["Profile", "ChatbotSettings"],
     }),
 
     testChatbot: builder.mutation({
@@ -46,6 +46,7 @@ export const chatbotApi = createApi({
         body,
       }),
     }),
+    
   }),
 });
 

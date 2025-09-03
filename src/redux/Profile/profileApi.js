@@ -5,7 +5,6 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const profileApi = createApi({
   reducerPath: "profileApi",
   baseQuery: fetchBaseQuery({
-    // CORRECT: The baseUrl now correctly and consistently points to the API root.
     baseUrl: `${BACKEND_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
@@ -15,25 +14,46 @@ export const profileApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Profile"],
+  // Add "Me" to the tagTypes array
+  tagTypes: ["Profile", "Me"],
   endpoints: (builder) => ({
+    // This is the new query to get fresh user data
+    getMe: builder.query({
+      query: () => "/auth/me",
+      providesTags: ["Me"],
+      transformResponse: (response) => {
+        // Ensure the connection status is always a boolean for consistent UI logic
+        if (response?.user) {
+          return {
+            ...response,
+            user: {
+              ...response.user,
+              isInstagramConnected: !!response.user.instagramUserId,
+            },
+          };
+        }
+        return response;
+      },
+    }),
+    
+    // Your existing endpoints remain unchanged
     getMyProfile: builder.query({
-      // CORRECT: The URL is now relative to /api
       query: () => "/profiles/me",
       providesTags: ["Profile"],
     }),
     updateMyProfile: builder.mutation({
       query: (formData) => {
         return {
-          // CORRECT: The URL is now relative to /api
           url: "/profiles/me",
-          method: "PUT",
+          method: "PUT", // Note: A POST request that updates is often a PUT or PATCH
           body: formData,
         };
       },
-      invalidatesTags: ["Profile"],
+      invalidatesTags: ["Profile", "Me"], // Also invalidate "Me" in case the profile update changes user data
     }),
   }),
 });
 
-export const { useGetMyProfileQuery, useUpdateMyProfileMutation } = profileApi;
+// Export the new hook alongside your existing ones
+export const { useGetMeQuery, useGetMyProfileQuery, useUpdateMyProfileMutation } =
+  profileApi;

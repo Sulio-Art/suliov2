@@ -5,6 +5,8 @@ import { Provider as ReduxProvider } from "react-redux";
 import { store, persistor } from "@/redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { Loader2 } from "lucide-react";
+import UnsavedChangesDialog from "./Components/Reuseable/useUnsavedChanges.js";
+
 
 // A simple loading component to show while the store is rehydrating from storage.
 const ReduxLoading = () => (
@@ -19,6 +21,7 @@ export function Providers({ children }) {
       <ReduxProvider store={store}>
         <PersistGate loading={<ReduxLoading />} persistor={persistor}>
           {children}
+           <UnsavedChangesDialog/>
         </PersistGate>
       </ReduxProvider>
     </SessionProvider>

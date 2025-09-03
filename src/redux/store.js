@@ -12,8 +12,9 @@ import { transactionApi } from "./Transaction/transactionApi";
 import { authApi } from "./auth/authApi";
 import { adminApi } from "./Admin/adminApi";
 import { chatbotApi } from "./Chatbot/chatbotApi";
+import uiReducer from "./UI/uiSlice";
 
-// --- IMPORTS FOR PERSISTENCE ---
+
 import {
   persistStore,
   persistReducer,
@@ -24,9 +25,8 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
+import storage from 'redux-persist/lib/storage';
 
-// --- COMBINE ALL REDUCERS ---
 const rootReducer = combineReducers({
   [artworkApi.reducerPath]: artworkApi.reducer,
   [dashboardApi.reducerPath]: dashboardApi.reducer,
@@ -40,22 +40,22 @@ const rootReducer = combineReducers({
   [chatbotApi.reducerPath]: chatbotApi.reducer,
   event: eventReducer,
   auth: authReducer,
+  ui: uiReducer,
 });
 
-// --- PERSISTENCE CONFIGURATION ---
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'], // Only the 'auth' slice (with userInfo and token) will be persisted
+  whitelist: ['auth'], 
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  reducer: persistedReducer, // Use the persisted reducer
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      // This is required to avoid non-serializable value errors with redux-persist
+     
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },

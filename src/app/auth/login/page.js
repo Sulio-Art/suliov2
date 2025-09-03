@@ -101,32 +101,39 @@ function LoginPageContent() {
   });
   const newPasswordValue = watchReset("newPassword");
 
- const onLogin = async (data) => {
-  try {
-    const userData = await login(data).unwrap();
-    console.log("Data received from backend login:", userData); 
-    dispatch(
+const onLogin = async (data) => {
+    try {
+      const userData = await login(data).unwrap();
+      dispatch(
+        setCredentials({ user: userData.user, backendToken: userData.backendToken })
+      );
 
-      setCredentials({ user: userData.user, backendToken: userData.backendToken })
-    );
+      const result = await signIn("credentials", {
+        data: JSON.stringify(userData),
+        redirect: false,
+      });
 
-    const result = await signIn("credentials", {
-     
-      token: userData.backendToken,
-      redirect: false,
-    });
+      if (result?.error) {
+        toast.error("Session could not be created. Please try again.");
+      } else if (result?.ok) {
+        // --- THIS IS THE FIX ---
+        // 1. Get the user data that we just received.
+        const user = userData.user;
 
-    if (result?.error) {
-      toast.error("Session could not be created. Please try again.");
-    } else if (result?.ok) {
-      window.location.href = "/";
+        // 2. Determine the correct dashboard URL based on the user's role.
+        const targetUrl = user.role === "admin" 
+          ? "/admin" 
+          : `/user/${user._id}/dashboard`;
+
+        // 3. Redirect directly to the correct dashboard.
+        router.push(targetUrl);
+      }
+    } catch (err) {
+      toast.error(
+        err?.data?.message || "Login failed. Please check your credentials."
+      );
     }
-  } catch (err) {
-    toast.error(
-      err?.data?.message || "Login failed. Please check your credentials."
-    );
-  }
-};
+  };
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();

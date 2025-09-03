@@ -1,26 +1,26 @@
 "use client";
 
-import { useDispatch } from "react-redux";
 import { signOut } from "next-auth/react";
-import { persistor } from "@/redux/store";
-import { clearCredentials } from "@/redux/auth/authSlice";
-import { Button } from "../ui/button"; // Assuming you have a Button component
+import { useSelector, useDispatch } from "react-redux";
 import { LogOut } from "lucide-react";
+import { Button } from "../ui/button";
+import { selectIsFormDirty, openUnsavedChangesDialog } from "@/redux/UI/uiSlice";
 
-const LogoutButton = () => {
+const CHAT_HISTORY_STORAGE_KEY = 'sulioV2TestChatHistories';
+
+export default function LogoutButton() {
   const dispatch = useDispatch();
+  const isFormDirty = useSelector(selectIsFormDirty);
 
   const handleLogout = async () => {
+    if (isFormDirty) {
+      dispatch(openUnsavedChangesDialog());
+      return;
+    }
+    
     try {
-      // 1. Clear the Redux state
-      dispatch(clearCredentials());
-      
-      // 2. Purge the persisted state from storage
-      await persistor.purge();
-      
-      // 3. Sign out of the NextAuth session and redirect
+      localStorage.removeItem(CHAT_HISTORY_STORAGE_KEY);
       await signOut({ callbackUrl: "/auth/login" });
-
     } catch (error) {
       console.error("Failed to logout:", error);
     }
@@ -28,14 +28,12 @@ const LogoutButton = () => {
 
   return (
     <Button
-      onClick={handleLogout}
       variant="ghost"
-      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+      onClick={handleLogout}
+      className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50"
     >
-      <LogOut className="mr-2 h-4 w-4" />
-      Logout
+      <LogOut className="mr-3 h-5 w-5" />
+      <span>Logout</span>
     </Button>
   );
-};
-
-export default LogoutButton;
+}

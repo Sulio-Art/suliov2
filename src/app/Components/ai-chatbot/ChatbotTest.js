@@ -3,26 +3,20 @@ import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { Bot, Send, Loader2, User as UserIcon } from "lucide-react";
 import { Input } from "../ui/input";
-import { useTestChatbotMutation } from "@/redux/Chatbot/chatbotApi"; // <-- IMPORT THE HOOK
+import { useTestChatbotMutation } from "@/redux/Chatbot/chatbotApi";
 
-export default function ChatbotTest({ activeStep }) {
-  // --- RTK Query Mutation ---
+export default function ChatbotTest({ activeStep, messages, setMessages }) {
   const [testChatbot, { isLoading }] = useTestChatbotMutation();
-
-  // --- Local State ---
   const [userInput, setUserInput] = useState("");
-  const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // --- Effects (Unchanged) ---
   useEffect(() => {
-    setMessages([
-      {
-        role: "assistant",
-        content: `Testing the "${activeStep}" prompt. Type a message to begin.`
-      }
-    ]);
-  }, [activeStep]);
+    if (!messages || messages.length === 0) {
+      setMessages([
+        { role: "assistant", content: `Testing the "${activeStep}" prompt. Type a message to begin.` }
+      ]);
+    }
+  }, [activeStep, messages, setMessages]);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,24 +33,22 @@ export default function ChatbotTest({ activeStep }) {
     setUserInput("");
 
     try {
-      // Use the RTK mutation hook
       const result = await testChatbot({
         messages: currentMessages,
         activeStep: activeStep,
-      }).unwrap(); // .unwrap() provides better error handling
+      }).unwrap();
 
-      const assistantMessage = { role: "assistant", content: result.response };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const finalMessages = [...currentMessages, { role: "assistant", content: result.response }];
+      setMessages(finalMessages);
 
     } catch (err) {
       const errorMessage = err.data?.message || "Failed to get a response from the chatbot.";
       toast.error(errorMessage);
-      const errorResponseMessage = { role: "assistant", content: `Error: ${errorMessage}` };
-      setMessages((prev) => [...prev, errorResponseMessage]);
+      const finalMessages = [...currentMessages, { role: "assistant", content: `Error: ${errorMessage}` }];
+      setMessages(finalMessages);
     }
   };
   
-  // --- JSX (Mostly Unchanged) ---
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">

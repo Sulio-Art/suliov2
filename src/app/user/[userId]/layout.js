@@ -6,32 +6,41 @@ import { usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 
-import { useInstagramConnection } from "@/hooks/useInstagramConnection";
+// Import the new, reliable RTK Query hook for getting user data
+import { useGetMeQuery } from "@/redux/Profile/profileApi";
 import Sidebar from "../../Components/User/Sidebar";
-import InstagramConnectionGate from "@/app/Components/auth/instagram/InstagramConnectionGate"; // <-- IMPORT THE NEW GATE
+import InstagramConnectionGate from "@/app/Components/auth/instagram/InstagramConnectionGate";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export default function UserLayout({ children }) {
   const { status: sessionStatus } = useSession();
   const pathname = usePathname();
-
-  const { isConnected: isInstagramConnected, loading: isConnectionLoading } =
-    useInstagramConnection();
+  const token = useSelector(selectBackendToken);
 
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const isLoading = sessionStatus === "loading" || isConnectionLoading;
+  // Use the new hook to get real-time user data.
+  // The query will automatically skip running until the auth token is available.
+  const { data: meData, isLoading: isMeLoading } = useGetMeQuery(undefined, {
+    skip: !token,
+  });
+  
+  // The definitive source of truth for the connection status now comes from our live API call.
+  const isInstagramConnected = meData?.user?.isInstagramConnected || false;
 
-  // --- MODIFICATION START ---
-  // Define which pages are EXEMPT from the Instagram connection lock.
+  // The overall loading state now correctly waits for both the session and the fresh user data.
+  const isLoading = sessionStatus === "loading" || (token && isMeLoading);
+
+  // This UI logic is UNCHANGED, as requested.
   const isExemptPage =
     pathname.includes("/profile") || pathname.includes("/subscription");
 
-  // Determine if the UI should be in the "locked" state.
+  // This UI logic is UNCHANGED, as requested.
   const isLocked = !isInstagramConnected && !isExemptPage && !isLoading;
-  // --- MODIFICATION END ---
 
   const handleConnectToInstagram = async () => {
     setIsConnecting(true);
@@ -52,10 +61,9 @@ export default function UserLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* The Sidebar is a direct child of the flex container, so it will not be blurred. */}
+      {/* The Sidebar receives the up-to-date connection status */}
       <Sidebar isInstagramConnected={isInstagramConnected} />
 
-      {/* The <main> tag will contain the page content and our new gate */}
       <main className="flex-1 overflow-y-auto relative">
         {isLoading ? (
           <div className="flex h-full w-full items-center justify-center">
@@ -63,12 +71,12 @@ export default function UserLayout({ children }) {
           </div>
         ) : (
           <>
-            {/* This div wraps the actual page content. It gets blurred and disabled when locked. */}
+            {/* The blurring logic is UNCHANGED, as requested */}
             <div className={cn(isLocked && "blur-md pointer-events-none")}>
               {children}
             </div>
 
-            {/* If the UI is locked, render the Gate component ON TOP of the blurred content. */}
+            {/* The gate logic is UNCHANGED, as requested */}
             {isLocked && (
               <InstagramConnectionGate
                 onConnect={handleConnectToInstagram}
@@ -81,5 +89,3 @@ export default function UserLayout({ children }) {
     </div>
   );
 }
-
-//TODO need to get original ui of hero page

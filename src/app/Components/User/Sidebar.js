@@ -4,7 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useSubscription } from "@/hooks/useSubscription";
+// --- 1. IMPORT the RTK Query hook ---
+import { useGetMySubscriptionQuery } from "@/redux/Subscription/subscriptionApi";
+import { useSelector } from "react-redux";
+import { selectBackendToken } from "@/redux/auth/authSlice";
 import { cn } from "@/lib/utils";
 import {
   LayoutGrid,
@@ -16,14 +19,31 @@ import {
   Calendar,
   User,
   Lock,
+  Loader2, // Import a loader for a better user experience
 } from "lucide-react";
 import LogoutButton from "../Reuseable/LogoutButton";
 
 export default function Sidebar({ isInstagramConnected }) {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
-  const { hasAccess } = useSubscription();
+  const { data: session, status: sessionStatus } = useSession();
+  const token = useSelector(selectBackendToken); // Get the token from Redux
   const userId = session?.user?.id;
+
+  // --- 2. REPLACE the old hook with the RTK Query hook ---
+  // The query will be skipped until both the session and the backend token exist.
+  const {
+    data: subscription,
+    isLoading: isSubscriptionLoading,
+  } = useGetMySubscriptionQuery(undefined, {
+    skip: sessionStatus !== "authenticated" || !token,
+  });
+
+  // --- 3. RECREATE the `hasAccess` logic based on the RTK Query response ---
+  // The backend returns an `entitlements` object. We check it directly.
+  const hasAccess = (featureKey) => {
+    if (!subscription?.entitlements?.features) return false;
+    return !!subscription.entitlements.features[featureKey];
+  };
 
   const allItems = [
     {
@@ -69,8 +89,13 @@ export default function Sidebar({ isInstagramConnected }) {
     (item) => !item.feature || hasAccess(item.feature)
   );
 
-  if (status === "loading") {
-    return <div className="hidden lg:block w-64 bg-white border-r" />;
+  // Combine session loading and initial subscription loading for the loading state
+  if (sessionStatus === "loading" || (token && isSubscriptionLoading)) {
+    return (
+      <div className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
   }
 
   return (
@@ -86,7 +111,6 @@ export default function Sidebar({ isInstagramConnected }) {
       <nav className="flex-grow px-4 space-y-2">
         {mainItems.map((item) => {
           const isActive = item.href !== "#" && pathname.startsWith(item.href);
-
           const isLocked = !isInstagramConnected && !item.isExempt;
 
           return (
@@ -97,7 +121,9 @@ export default function Sidebar({ isInstagramConnected }) {
                 "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all",
                 isActive
                   ? "bg-blue-50 text-blue-700"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
+                // Add a class to disable locked items
+                isLocked && "opacity-50 pointer-events-none"
               )}
             >
               <item.icon

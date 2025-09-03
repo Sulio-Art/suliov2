@@ -7,42 +7,24 @@ export const authOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        token: { label: "Backend Token", type: "text" },
+        data: { label: "Data", type: "text" },
       },
       async authorize(credentials, req) {
-        try {
-          if (credentials?.token) {
-            const res = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
-              headers: { Authorization: `Bearer ${credentials.token}` },
-              cache: "no-store",
-            });
-            const data = await res.json();
-            if (!res.ok || !data.user) {
-              return null;
-            }
-            return { ...data.user, backendToken: credentials.token };
-          }
-
-          if (credentials?.email && credentials?.password) {
-            const res = await fetch(`${BACKEND_API_URL}/api/auth/login`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
-            });
-            const data = await res.json();
-            if (data.user) {
-              return { ...data.user, backendToken: data.token };
-            }
-          }
-
+        if (!credentials?.data) {
           return null;
+        }
+
+        try {
+          const userData = JSON.parse(credentials.data);
+
+          if (userData.user && userData.backendToken) {
+            return { ...userData.user, backendToken: userData.backendToken };
+          }
+          
+          return null;
+
         } catch (error) {
-          console.error("[Authorize] CATCH BLOCK ERROR: ", error);
+          console.error("Failed to parse credentials data in authorize:", error);
           return null;
         }
       },
@@ -52,36 +34,15 @@ export const authOptions = {
     signIn: "/auth/login",
   },
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user }) {
       if (user) {
-        token.id = user.id || user._id;
+        token.id = user._id; 
         token.backendToken = user.backendToken;
         token.instagramUserId = user.instagramUserId;
         token.email = user.email;
         token.role = user.role;
         token.subscriptionStatus = user.subscriptionStatus;
-        return token;
       }
-
-      if (trigger === "update" && token.backendToken) {
-        console.log(
-          "[JWT Callback] Update triggered. Refetching user from /me..."
-        );
-        const res = await fetch(`${BACKEND_API_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token.backendToken}` },
-          cache: "no-store",
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          token.instagramUserId = data.user.instagramUserId;
-          console.log(
-            "[JWT Callback] Token refreshed with new instagramUserId:",
-            token.instagramUserId
-          );
-        }
-      }
-
       return token;
     },
     async session({ session, token }) {
