@@ -116,16 +116,13 @@ const onLogin = async (data) => {
       if (result?.error) {
         toast.error("Session could not be created. Please try again.");
       } else if (result?.ok) {
-        // --- THIS IS THE FIX ---
-        // 1. Get the user data that we just received.
+       
         const user = userData.user;
 
-        // 2. Determine the correct dashboard URL based on the user's role.
         const targetUrl = user.role === "admin" 
           ? "/admin" 
           : `/user/${user._id}/dashboard`;
 
-        // 3. Redirect directly to the correct dashboard.
         router.push(targetUrl);
       }
     } catch (err) {

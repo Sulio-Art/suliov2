@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { selectBackendToken } from "@/redux/auth/authSlice";
-
-// Import the new, reliable RTK Query hook for getting user data
 import { useGetMeQuery } from "@/redux/Profile/profileApi";
 import Sidebar from "../../Components/User/Sidebar";
 import InstagramConnectionGate from "@/app/Components/auth/instagram/InstagramConnectionGate";
@@ -23,23 +21,17 @@ export default function UserLayout({ children }) {
 
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // Use the new hook to get real-time user data.
-  // The query will automatically skip running until the auth token is available.
   const { data: meData, isLoading: isMeLoading } = useGetMeQuery(undefined, {
     skip: !token,
   });
   
-  // The definitive source of truth for the connection status now comes from our live API call.
   const isInstagramConnected = meData?.user?.isInstagramConnected || false;
 
-  // The overall loading state now correctly waits for both the session and the fresh user data.
   const isLoading = sessionStatus === "loading" || (token && isMeLoading);
 
-  // This UI logic is UNCHANGED, as requested.
   const isExemptPage =
     pathname.includes("/profile") || pathname.includes("/subscription");
 
-  // This UI logic is UNCHANGED, as requested.
   const isLocked = !isInstagramConnected && !isExemptPage && !isLoading;
 
   const handleConnectToInstagram = async () => {
@@ -61,7 +53,6 @@ export default function UserLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* The Sidebar receives the up-to-date connection status */}
       <Sidebar isInstagramConnected={isInstagramConnected} />
 
       <main className="flex-1 overflow-y-auto relative">
@@ -71,12 +62,10 @@ export default function UserLayout({ children }) {
           </div>
         ) : (
           <>
-            {/* The blurring logic is UNCHANGED, as requested */}
             <div className={cn(isLocked && "blur-md pointer-events-none")}>
               {children}
             </div>
 
-            {/* The gate logic is UNCHANGED, as requested */}
             {isLocked && (
               <InstagramConnectionGate
                 onConnect={handleConnectToInstagram}

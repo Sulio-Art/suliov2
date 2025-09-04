@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import ChatbotStepper from "../../../Components/ai-chatbot/ChatbotStepper";
 import ChatbotSetup from "../../../Components/ai-chatbot/ChatbotSetup";
 import ChatbotTest from "../../../Components/ai-chatbot/ChatbotTest";
-// --- The problematic import is now REMOVED ---
 import { cn } from "@/lib/utils";
 
 const steps = [
@@ -15,7 +14,6 @@ const steps = [
   "Return Artwork",
 ];
 
-// --- THE FIX IS HERE: Define the constant directly in the file that uses it. ---
 const CHAT_HISTORY_STORAGE_KEY = 'sulioV2TestChatHistories';
 
 export default function ClientWrapper() {
@@ -25,7 +23,6 @@ export default function ClientWrapper() {
 
   useEffect(() => {
     try {
-      // Use the locally defined constant
       const savedHistories = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
       if (savedHistories) {
         setMessageHistories(JSON.parse(savedHistories));
@@ -38,7 +35,6 @@ export default function ClientWrapper() {
   useEffect(() => {
     try {
       if (Object.keys(messageHistories).length > 0) {
-        // Use the locally defined constant
         localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(messageHistories));
       }
     } catch (error) {

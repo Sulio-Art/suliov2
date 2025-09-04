@@ -10,4 +10,3 @@ export default function AiChatbotPage() {
   );
 }
 
-//TODO race behaviour when clicked to page , upgrade showng for 1 sec

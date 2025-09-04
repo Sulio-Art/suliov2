@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-// --- 1. IMPORT the RTK Query hook ---
 import { useGetMySubscriptionQuery } from "@/redux/Subscription/subscriptionApi";
 import { useSelector } from "react-redux";
 import { selectBackendToken } from "@/redux/auth/authSlice";
@@ -19,18 +18,17 @@ import {
   Calendar,
   User,
   Lock,
-  Loader2, // Import a loader for a better user experience
+  Loader2,
 } from "lucide-react";
 import LogoutButton from "../Reuseable/LogoutButton";
 
 export default function Sidebar({ isInstagramConnected }) {
   const pathname = usePathname();
   const { data: session, status: sessionStatus } = useSession();
-  const token = useSelector(selectBackendToken); // Get the token from Redux
+  const token = useSelector(selectBackendToken); 
   const userId = session?.user?.id;
 
-  // --- 2. REPLACE the old hook with the RTK Query hook ---
-  // The query will be skipped until both the session and the backend token exist.
+  
   const {
     data: subscription,
     isLoading: isSubscriptionLoading,
@@ -38,8 +36,6 @@ export default function Sidebar({ isInstagramConnected }) {
     skip: sessionStatus !== "authenticated" || !token,
   });
 
-  // --- 3. RECREATE the `hasAccess` logic based on the RTK Query response ---
-  // The backend returns an `entitlements` object. We check it directly.
   const hasAccess = (featureKey) => {
     if (!subscription?.entitlements?.features) return false;
     return !!subscription.entitlements.features[featureKey];
@@ -89,7 +85,6 @@ export default function Sidebar({ isInstagramConnected }) {
     (item) => !item.feature || hasAccess(item.feature)
   );
 
-  // Combine session loading and initial subscription loading for the loading state
   if (sessionStatus === "loading" || (token && isSubscriptionLoading)) {
     return (
       <div className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col items-center justify-center">
@@ -122,7 +117,6 @@ export default function Sidebar({ isInstagramConnected }) {
                 isActive
                   ? "bg-blue-50 text-blue-700"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
-                // Add a class to disable locked items
                 isLocked && "opacity-50 pointer-events-none"
               )}
             >
