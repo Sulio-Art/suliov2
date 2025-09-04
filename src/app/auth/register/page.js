@@ -10,19 +10,19 @@ import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import { useDispatch } from "react-redux";
 
-// --- RTK AND REDUX IMPORTS ---
+
 import {
   useFinalizeRegistrationMutation,
   useCompleteInstagramRegistrationMutation,
 } from "@/redux/auth/authApi";
 import { setCredentials } from "@/redux/auth/authSlice";
 
-// --- UI COMPONENT IMPORTS (Unchanged) ---
+
 import { Card } from "../../Components/ui/card";
 import StandardRegistrationForm from "../../Components/auth/register/StandardRegistrationForm";
 import { Loader2 } from "lucide-react";
 
-// --- SCHEMA (Unchanged) ---
+
 const passwordValidation = z
   .string()
   .min(8, "Password must be at least 8 characters long")
@@ -106,20 +106,28 @@ function RegisterPageContent() {
   }, [searchParams, setValue]);
 
   const autoLogin = async (backendToken, userData) => {
-    dispatch(setCredentials({ user: userData, backendToken }));
+  dispatch(setCredentials({ user: userData, backendToken }));
 
-    const result = await signIn("credentials", {
-      token: backendToken,
-      redirect: false,
-    });
-
-    if (result?.error) {
-      toast.error("Auto-login failed. Please log in manually.");
-      router.push("/auth/login");
-    } else {
-      window.location.href = "/";
-    }
+  // Create the payload in the exact structure that your authorize function expects
+  const payload = {
+    user: userData,
+    backendToken: backendToken,
   };
+
+  const result = await signIn("credentials", {
+    data: JSON.stringify(payload),
+    redirect: false,
+  });
+  if (result?.error) {
+    toast.error("Auto-login failed. Please log in manually.");
+    router.push("/auth/login");
+  } else {
+    const targetUrl = userData.role === "admin" 
+        ? "/admin" 
+        : `/user/${userData._id}/dashboard`;
+    window.location.href = targetUrl;
+  }
+};
 
   const handleFinalizeRegistration = async (formData) => {
     setUserExistsError(false);
