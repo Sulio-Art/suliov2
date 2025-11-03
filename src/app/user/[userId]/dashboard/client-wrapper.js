@@ -22,8 +22,9 @@ import { selectBackendToken, selectCurrentUser } from "@/redux/auth/authSlice";
 const DashboardSkeleton = () => (
   <div className="p-4 md:p-8 bg-gray-50 min-h-screen flex flex-col gap-8 animate-pulse">
     <div className="h-9 bg-gray-200 rounded w-1/4"></div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="h-20 bg-gray-200 rounded-xl"></div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {" "}
+      {/* Changed lg:grid-cols-4 to lg:grid-cols-3 */}
       <div className="h-20 bg-gray-200 rounded-xl"></div>
       <div className="h-20 bg-gray-200 rounded-xl"></div>
       <div className="h-20 bg-gray-200 rounded-xl"></div>
@@ -42,7 +43,8 @@ const DashboardSkeleton = () => (
 const FullDashboard = ({ dashboardData, userId }) => (
   <div className="p-4 md:p-8 bg-gray-50 min-h-screen flex flex-col gap-8">
     <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {/* --- THIS IS THE CORRECTED 3-CARD LAYOUT --- */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <SummaryCard
         icon={<Users className="h-6 w-6 text-blue-600" />}
         label="Total Events"
@@ -58,13 +60,14 @@ const FullDashboard = ({ dashboardData, userId }) => (
         label="Artwork Sold Today"
         value={dashboardData?.artworkSoldToday ?? 0}
       />
+      {/* The incorrect "Placeholder" card has been removed. */}
     </div>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
         <CountryStats stats={dashboardData?.countryStats ?? []} />
         <AgeDonut data={dashboardData?.ageGroups ?? []} />
       </div>
-      <SentimentScore score={dashboardData?.sentimentScore ?? 0} />
+      <SentimentScore score={dashboardData?.sentimentScore ?? "0.00"} />
     </div>
     <RecentTransactions
       transactions={dashboardData?.recentTransactions ?? []}
@@ -74,28 +77,21 @@ const FullDashboard = ({ dashboardData, userId }) => (
 );
 
 export default function ClientWrapper() {
-  // CORRECT: Get the authentication token from the Redux store.
   const token = useSelector(selectBackendToken);
-  // CORRECT: Get the user object from the Redux store for consistency.
   const user = useSelector(selectCurrentUser);
   const userId = user?._id;
 
-  // CORRECT: Add the `skip: !token` option. This query will not run until the token exists.
   const { data: onboardingStatus, isLoading: isOnboardingLoading } =
     useGetOnboardingStatusQuery(undefined, { skip: !token });
+
+  const { data: dashboardData, isLoading: isStatsLoading } =
+    useGetDashboardStatsQuery(undefined, {
+      skip: !token,
+    });
 
   const isOnboardingComplete =
     onboardingStatus?.hasUploadedArtwork &&
     onboardingStatus?.isChatbotConfigured;
-
-  // CORRECT: Add the `!token` check to the skip condition. This query now waits for both the token AND onboarding completion.
-  const { data: dashboardData, isLoading: isStatsLoading } =
-    useGetDashboardStatsQuery(undefined, {
-      skip: !token || !isOnboardingComplete,
-    });
-
-  const isLoading =
-    isOnboardingLoading || (isOnboardingComplete && isStatsLoading);
 
   if (isOnboardingLoading) {
     return (
@@ -109,7 +105,7 @@ export default function ClientWrapper() {
     return <Onboarding onboardingStatus={onboardingStatus} userId={userId} />;
   }
 
-  if (isLoading || !dashboardData) {
+  if (isStatsLoading || !dashboardData) {
     return <DashboardSkeleton />;
   }
 

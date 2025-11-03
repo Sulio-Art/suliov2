@@ -5,13 +5,16 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/redux/auth/authSlice";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function InstagramCallbackHandler() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const searchParams = useSearchParams();
-  const { data: session, status, update } = useSession(); 
+  const { data: session, status, update } = useSession();
 
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("Processing authentication...");
@@ -63,7 +66,6 @@ function InstagramCallbackHandler() {
           throw new Error(data.message || "Failed to connect account.");
         }
 
-        
         await update();
 
         toast.success("Instagram connected successfully!");
@@ -90,10 +92,27 @@ function InstagramCallbackHandler() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
 
-        if (response.status === 200 && data.token) {
-          await signIn("credentials", { token: data.token, redirect: false });
-          router.push("/");
-          router.refresh();
+        if (response.status === 200 && data.token && data.user) {
+          dispatch(setCredentials({ user: data.user, token: data.token }));
+
+          const result = await signIn("credentials", {
+            data: JSON.stringify({
+              user: data.user,
+              token: data.token,
+            }),
+            redirect: false,
+          });
+
+          if (result?.error) {
+            throw new Error("Session could not be created. Please try again.");
+          }
+
+          const targetUrl =
+            data.user.role === "admin"
+              ? "/admin"
+              : `/user/${data.user._id}/dashboard`;
+
+          window.location.href = targetUrl;
         } else if (response.status === 201 && data.completionToken) {
           sessionStorage.setItem("igCompletionToken", data.completionToken);
           sessionStorage.setItem("igPrefillData", JSON.stringify(data.prefill));
