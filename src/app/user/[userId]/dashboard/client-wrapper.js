@@ -24,7 +24,6 @@ const DashboardSkeleton = () => (
     <div className="h-9 bg-gray-200 rounded w-1/4"></div>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {" "}
-      {/* Changed lg:grid-cols-4 to lg:grid-cols-3 */}
       <div className="h-20 bg-gray-200 rounded-xl"></div>
       <div className="h-20 bg-gray-200 rounded-xl"></div>
       <div className="h-20 bg-gray-200 rounded-xl"></div>
@@ -43,7 +42,6 @@ const DashboardSkeleton = () => (
 const FullDashboard = ({ dashboardData, userId }) => (
   <div className="p-4 md:p-8 bg-gray-50 min-h-screen flex flex-col gap-8">
     <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-    {/* --- THIS IS THE CORRECTED 3-CARD LAYOUT --- */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <SummaryCard
         icon={<Users className="h-6 w-6 text-blue-600" />}
@@ -60,7 +58,6 @@ const FullDashboard = ({ dashboardData, userId }) => (
         label="Artwork Sold Today"
         value={dashboardData?.artworkSoldToday ?? 0}
       />
-      {/* The incorrect "Placeholder" card has been removed. */}
     </div>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
