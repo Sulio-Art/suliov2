@@ -3,7 +3,6 @@ import "./globals.css";
 import { Providers } from "./Providers";
 import { Toaster } from "react-hot-toast";
 
-
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -23,4 +22,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
