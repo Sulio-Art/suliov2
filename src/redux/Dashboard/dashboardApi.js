@@ -26,6 +26,7 @@ export const dashboardApi = createApi({
       // CORRECT: The URL is now relative to /api
       query: () => "/dashboard/stats",
       providesTags: ["DashboardStats"],
+      refetchOnMountOrArgChange: true,
     }),
   }),
 });
