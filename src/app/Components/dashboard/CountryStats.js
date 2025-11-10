@@ -1,10 +1,20 @@
 import { Globe } from "lucide-react";
 import { getDeterministicColor } from "../ui/colorPalette";
-import { countryCodeMap, formatCountryDisplay } from "../ui/countryCodeMapper";
+import { countryCodeMap, normalizeCountryName } from "../ui/countryCodeMapper";
+
+const capitalizeCountryName = (name) => {
+  if (!name) return "";
+  return name
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 export default function CountryStats({ stats = [], isLoading }) {
   const incomingStatsMap = new Map(
-    stats.map((stat) => [stat.label.toLowerCase(), stat.count])
+    stats
+      .filter((stat) => stat && typeof stat.label === "string" && stat.label)
+      .map((stat) => [normalizeCountryName(stat.label), stat.count])
   );
 
   const allCountryFullNames = Object.keys(countryCodeMap);
@@ -19,8 +29,8 @@ export default function CountryStats({ stats = [], isLoading }) {
     if (stat.label.toLowerCase() === "unknown") {
       return { ...stat, label: "Other Countries" };
     }
-    const countryCode = formatCountryDisplay(stat.label);
-    return { ...stat, label: countryCode };
+    const displayName = capitalizeCountryName(stat.label);
+    return { ...stat, label: displayName };
   });
 
   const visibleStats = modifiedStats.filter((stat) => stat.count > 0);

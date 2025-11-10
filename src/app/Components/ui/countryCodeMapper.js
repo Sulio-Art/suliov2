@@ -1,5 +1,3 @@
-// src/app/Components/ui/countryCodeMapper.js
-
 export const countryCodeMap = {
   afghanistan: "AF",
   albania: "AL",
@@ -199,6 +197,21 @@ export const countryCodeMap = {
   yemen: "YE",
   zambia: "ZM",
   zimbabwe: "ZW",
+};
+
+const countryCodeToNameMap = Object.fromEntries(
+  Object.entries(countryCodeMap).map(([name, code]) => [code, name])
+);
+export const normalizeCountryName = (nameOrCode) => {
+  if (!nameOrCode || typeof nameOrCode !== "string") {
+    return null;
+  }
+  const normalized = nameOrCode.trim();
+  const upperCase = normalized.toUpperCase();
+  if (countryCodeToNameMap[upperCase]) {
+    return countryCodeToNameMap[upperCase];
+  }
+  return normalized.toLowerCase();
 };
 
 export const getCountryCode = (countryName) => {

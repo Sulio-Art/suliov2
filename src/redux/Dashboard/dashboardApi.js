@@ -5,7 +5,6 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const dashboardApi = createApi({
   reducerPath: "dashboardApi",
   baseQuery: fetchBaseQuery({
-    // CORRECT: The baseUrl now correctly and consistently points to the API root.
     baseUrl: `${BACKEND_API_URL}/api`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token;
@@ -18,12 +17,10 @@ export const dashboardApi = createApi({
   tagTypes: ["Onboarding", "DashboardStats"],
   endpoints: (builder) => ({
     getOnboardingStatus: builder.query({
-      // CORRECT: The URL is now relative to /api
       query: () => "/dashboard/onboarding-status",
       providesTags: ["Onboarding"],
     }),
     getDashboardStats: builder.query({
-      // CORRECT: The URL is now relative to /api
       query: () => "/dashboard/stats",
       providesTags: ["DashboardStats"],
       refetchOnMountOrArgChange: true,
