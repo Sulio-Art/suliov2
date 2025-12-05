@@ -8,7 +8,7 @@ import React from "react";
 import { Mail, Facebook, Instagram } from "lucide-react";
 import Image from "next/image";
 // import { Card, CardContent } from "./Components/ui/card";
-import { Card, CardContent  } from "../../ui/card";
+import { Card, CardContent } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { Separator } from "../../ui/separator";
 // import { Button } from "./Components/ui/button";
@@ -57,15 +57,17 @@ export default function LandingPage() {
             </h1>
             <p className="text-gray-300 mb-8 lg:text-lg">
               Sulio AI Chatbot Assistant helps artists automate client
-              interactions, manage sales, and enhance their engagement—giving you
-              more time to create. Seamlessly integrate AI into your workflow and
-              experience the freedom to focus on what matters most: your art.
+              interactions, manage sales, and enhance their engagement—giving
+              you more time to create. Seamlessly integrate AI into your
+              workflow and experience the freedom to focus on what matters most:
+              your art.
             </p>
-            
+
             {/* Step 4: Wrap the Button with the dynamic Link */}
             <Link href="/auth/register">
               <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8 py-3 rounded-full mb-4">
-                {/* {isLoggedIn ? 'Go to Dashboard' : 'Try for Free'} */}Try for Free
+                {/* {isLoggedIn ? 'Go to Dashboard' : 'Try for Free'} */}Try for
+                Free
               </Button>
             </Link>
 
@@ -82,12 +84,21 @@ export default function LandingPage() {
             <a href="#" className="hover:text-black transition-colors">
               Contact Us
             </a>
-            <a href="#" className="hover:text-black transition-colors">
+            <Link
+              href="/privacy-policy"
+              className="hover:text-black transition-colors"
+            >
               Privacy Policy
-            </a>
-            <a href="#" className="hover:text-black transition-colors">
+            </Link>
+            <Link href="/terms" className="hover:text-black transition-colors">
               Terms and Conditions
-            </a>
+            </Link>
+            <Link
+              href="/cookie-policy"
+              className="hover:text-black transition-colors"
+            >
+              Cookie Policy
+            </Link>
           </nav>
           <div className="px-5 flex justify-center items-center w-full">
             <svg
@@ -119,17 +130,32 @@ export default function LandingPage() {
           </div>
           {/* Social Links */}
           <div className="flex gap-8">
-            <Button variant="ghost" size="icon" asChild className="hover:scale-110 transition-transform">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="hover:scale-110 transition-transform"
+            >
               <a href="#">
                 <Instagram className="w-6 h-6 text-gray-600 hover:text-gray-900" />
               </a>
             </Button>
-            <Button variant="ghost" size="icon" asChild className="hover:scale-110 transition-transform">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="hover:scale-110 transition-transform"
+            >
               <a href="#">
                 <Facebook className="w-6 h-6 text-gray-600 hover:text-gray-900" />
               </a>
             </Button>
-            <Button variant="ghost" size="icon" asChild className="hover:scale-110 transition-transform">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="hover:scale-110 transition-transform"
+            >
               <a href="#">
                 <Mail className="w-6 h-6 text-gray-600 hover:text-gray-900" />
               </a>
@@ -163,21 +189,38 @@ export default function LandingPage() {
                 priority
                 className="h-full w-12 md:w-24 object-cover"
               />
-              <span className="font-bold text-gray-600 text-left leading-tight">Sulio Art Artist AI Chatbot</span>
+              <span className="font-bold text-gray-600 text-left leading-tight">
+                Sulio Art Artist AI Chatbot
+              </span>
             </div>
             {/* Social Links */}
             <div className="flex gap-4 text-gray-600">
-              <Button variant="ghost" size="icon" asChild className="hover:scale-110 transition-transform">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="hover:scale-110 transition-transform"
+              >
                 <a href="#">
                   <Instagram className="w-6 h-6 text-gray-600 hover:text-gray-900" />
                 </a>
               </Button>
-              <Button variant="ghost" size="icon" asChild className="hover:scale-110 transition-transform">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="hover:scale-110 transition-transform"
+              >
                 <a href="#">
                   <Facebook className="w-6 h-6 text-gray-600 hover:text-gray-900" />
                 </a>
               </Button>
-              <Button variant="ghost" size="icon" asChild className="hover:scale-110 transition-transform">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="hover:scale-110 transition-transform"
+              >
                 <a href="#">
                   <Mail className="w-6 h-6 text-gray-600 hover:text-gray-900" />
                 </a>
@@ -188,14 +231,27 @@ export default function LandingPage() {
               <a href="#" className="hover:text-black transition-colors">
                 Contact Us
               </a>
-              ●
-              <a href="#" className="hover:text-black transition-colors">
+              {" ● "}
+              <Link
+                href="/privacy-policy"
+                className="hover:text-black transition-colors"
+              >
                 Privacy Policy
-              </a>
-              ●
-              <a href="#" className="hover:text-black transition-colors">
+              </Link>
+              {" ● "}
+              <Link
+                href="/terms"
+                className="hover:text-black transition-colors"
+              >
                 Terms and Conditions
-              </a>
+              </Link>
+              {" ● "}
+              <Link
+                href="/cookie-policy"
+                className="hover:text-black transition-colors"
+              >
+                Cookie Policy
+              </Link>
             </nav>
           </div>
           <div className="flex justify-end items-center w-full px-6 relative">
