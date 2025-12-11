@@ -7,7 +7,7 @@ import * as z from "zod";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import imageCompression from "browser-image-compression";
 import {
@@ -25,12 +25,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/Components/ui/select";
-import { DatePicker } from "@/app/Components/ui/date-picker";
 import { Input } from "@/app/Components/ui/input";
 import { Textarea } from "@/app/Components/ui/textarea";
 import { Button } from "@/app/Components/ui/button";
-import { UploadCloud, Trash2, Loader2, X } from "lucide-react";
-import { parseISO, startOfToday } from "date-fns";
+import {
+  UploadCloud,
+  Trash2,
+  Loader2,
+  X,
+  Calendar as CalendarIcon,
+} from "lucide-react";
+import { parseISO, format } from "date-fns";
 import {
   useGetDiaryEntryByIdQuery,
   useCreateDiaryEntryMutation,
@@ -58,12 +63,10 @@ export default function NewDiaryForm() {
   const { data: session } = useSession();
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
   const token = useSelector(selectBackendToken);
 
   const entryId = params.entryId;
   const isEditMode = !!entryId;
-  const preselectedDate = searchParams.get("date");
 
   const { data: entryData, isLoading: isFetchingEntry } =
     useGetDiaryEntryByIdQuery(entryId, {
@@ -83,7 +86,7 @@ export default function NewDiaryForm() {
       description: "",
       studioLife: "",
       artworkPhotos: [],
-      date: preselectedDate ? parseISO(preselectedDate) : undefined,
+      date: new Date(),
     },
   });
 
@@ -123,9 +126,7 @@ export default function NewDiaryForm() {
                   onClick={() => {
                     form.reset({
                       ...draftData,
-                      date: draftData.date
-                        ? new Date(draftData.date)
-                        : undefined,
+                      date: new Date(),
                     });
                     toast.dismiss(t.id);
                     toast.success("Draft restored!");
@@ -307,11 +308,16 @@ export default function NewDiaryForm() {
               <FormItem>
                 <FormLabel>Select Date</FormLabel>
                 <FormControl>
-                  <DatePicker
-                    date={field.value}
-                    setDate={field.onChange}
-                    fromDate={startOfToday()}
-                  />
+                  {/* 
+                    UPDATED: 
+                    - Removed 'opacity-50' (was making it too light)
+                    - Changed text to 'text-gray-700' (darker, more readable)
+                    - Kept 'cursor-not-allowed' for UI feedback
+                  */}
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm text-gray-700 cursor-not-allowed">
+                    <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                    {field.value ? format(field.value, "PPP") : "Today"}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

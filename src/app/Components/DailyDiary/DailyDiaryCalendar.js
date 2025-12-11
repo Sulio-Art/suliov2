@@ -18,7 +18,6 @@ import {
   isSameMonth,
   isSameDay,
   parseISO,
-  isAfter,
 } from "date-fns";
 import {
   ChevronLeft,
@@ -173,6 +172,7 @@ export default function DailyDiaryCalendar() {
               potential customers.
             </p>
           </div>
+          {/* Main "New Diary" button - Links to today automatically */}
           <Link href={userId ? `/user/${userId}/daily-diary/new` : "#"}>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -226,7 +226,10 @@ export default function DailyDiaryCalendar() {
                 );
                 const dayHasEntries = entriesForDay.length > 0;
                 const hasMultipleEntries = entriesForDay.length > 1;
-                const isPast = isAfter(today, day) && !isSameDay(today, day);
+
+                // RESTRICTION: Check if 'day' is strictly today
+                const isToday = isSameDay(day, today);
+
                 return (
                   <HoverCard key={dayStr} openDelay={100} closeDelay={150}>
                     <HoverCardTrigger asChild>
@@ -246,7 +249,9 @@ export default function DailyDiaryCalendar() {
                         >
                           {format(day, "d")}
                         </span>
-                        {!isPast && (
+
+                        {/* RESTRICTION: Only render the + Link if it is Today */}
+                        {isToday && (
                           <Link
                             href={`/user/${userId}/daily-diary/new?date=${dayStr}`}
                             className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
@@ -260,6 +265,7 @@ export default function DailyDiaryCalendar() {
                             </Button>
                           </Link>
                         )}
+
                         {dayHasEntries && (
                           <div className="space-y-1 mt-1">
                             <DiaryTag
