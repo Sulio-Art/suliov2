@@ -4,17 +4,10 @@ import toast, { Toaster } from "react-hot-toast";
 import ChatbotStepper from "../../../Components/ai-chatbot/ChatbotStepper";
 import ChatbotTest from "../../../Components/ai-chatbot/ChatbotTest";
 import { cn } from "@/lib/utils";
-import {
-  RefreshCw,
-  ArrowRight,
-  Smile,
-  Save,
-  Check,
-  Lock,
-  Loader2,
-} from "lucide-react";
+import { RefreshCw, ArrowRight, Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useGetMySubscriptionQuery } from "@/redux/Subscription/subscriptionApi";
+import { useGetChatbotSettingsQuery } from "@/redux/Chatbot/chatbotApi"; // CONNECTED BACKEND
 import { Button } from "../../../Components/ui/button";
 
 const STEP_PERMISSIONS = {
@@ -46,7 +39,6 @@ const steps = [
   "Return Artwork",
 ];
 
-// MOVED HERE: Descriptions map so it can be used in both Sidebar and Chat Header
 const STEP_DESCRIPTIONS = {
   "Setup Greetings": "Define start messages & welcome tone",
   "Setup Artist": "Configure persona, style & background",
@@ -57,7 +49,6 @@ const STEP_DESCRIPTIONS = {
 };
 
 const CHAT_HISTORY_STORAGE_KEY = "sulioV2TestChatHistories";
-const COMPLETED_STEPS_STORAGE_KEY = "sulioV2CompletedSteps";
 
 export default function ClientWrapper() {
   const [activeStep, setActiveStep] = useState(steps[0]);
@@ -65,28 +56,34 @@ export default function ClientWrapper() {
   const [completedSteps, setCompletedSteps] = useState([]);
   const [viewMode, setViewMode] = useState("chat");
 
+  // 1. Fetch Subscription (Existing)
   const { data: subscription, isLoading: isSubscriptionLoading } =
     useGetMySubscriptionQuery();
+
+  // 2. Fetch Chatbot Settings (NEW CONNECTION)
+  const { data: profileData, isLoading: isSettingsLoading } =
+    useGetChatbotSettingsQuery();
+
   const userPlan = subscription?.plan || "free";
 
+  // Check permissions
   const isStepAllowed = (step) => {
     if (isSubscriptionLoading) return true;
     const allowedSteps = STEP_PERMISSIONS[userPlan] || STEP_PERMISSIONS["free"];
     return allowedSteps.includes(step);
   };
 
+  // Load local chat history
   useEffect(() => {
     try {
       const savedHistories = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
-      const savedCompletion = localStorage.getItem(COMPLETED_STEPS_STORAGE_KEY);
-
       if (savedHistories) setMessageHistories(JSON.parse(savedHistories));
-      if (savedCompletion) setCompletedSteps(JSON.parse(savedCompletion));
     } catch (error) {
       console.error("Failed to load local storage data:", error);
     }
   }, []);
 
+  // Save chat history to local storage
   useEffect(() => {
     if (Object.keys(messageHistories).length > 0) {
       localStorage.setItem(
@@ -94,11 +91,26 @@ export default function ClientWrapper() {
         JSON.stringify(messageHistories)
       );
     }
-    localStorage.setItem(
-      COMPLETED_STEPS_STORAGE_KEY,
-      JSON.stringify(completedSteps)
-    );
-  }, [messageHistories, completedSteps]);
+  }, [messageHistories]);
+
+  // 3. Sync Completed Steps from Backend (NEW)
+  useEffect(() => {
+    if (profileData && profileData.chatbotSettings) {
+      // Convert backend keys (e.g., "setup-artist") to frontend step names
+      const backendSettings = profileData.chatbotSettings;
+      const completed = [];
+
+      steps.forEach((step) => {
+        // Backend key logic: "Setup Artist" -> "setup-artist"
+        const backendKey = step.toLowerCase().replace(/\s+/g, "-");
+        // If the key exists in the map and has a value, mark it complete
+        if (backendSettings[backendKey]) {
+          completed.push(step);
+        }
+      });
+      setCompletedSteps(completed);
+    }
+  }, [profileData]);
 
   useEffect(() => {
     const allCompleted = steps.every((s) => completedSteps.includes(s));
@@ -113,17 +125,12 @@ export default function ClientWrapper() {
     setMessageHistories((prev) => ({ ...prev, [activeStep]: newMessages }));
   };
 
-  const handleSave = () => {
-    if (!completedSteps.includes(activeStep)) {
-      setCompletedSteps((prev) => [...prev, activeStep]);
-    }
-    toast.success(`"${activeStep}" settings saved!`);
-  };
-
   const handleSidebarClick = (step) => {
     setActiveStep(step);
     setViewMode("chat");
   };
+
+  const isLoading = isSubscriptionLoading || isSettingsLoading;
 
   return (
     <div className="w-full h-[calc(100vh-10px)] p-4 flex flex-col max-w-[1600px] mx-auto overflow-hidden">
@@ -179,7 +186,6 @@ export default function ClientWrapper() {
               <div className="p-4 border-b bg-white flex items-center justify-between flex-shrink-0 z-20 shadow-sm">
                 <div className="flex flex-col">
                   <h3 className="font-semibold text-gray-800">{activeStep}</h3>
-                  {/* UPDATED: Displays specific description instead of static text */}
                   <p className="text-xs text-gray-500 mt-0.5">
                     {STEP_DESCRIPTIONS[activeStep] || "Configure this setting"}
                   </p>
@@ -189,34 +195,11 @@ export default function ClientWrapper() {
                   <div className="text-xs px-3 py-1 bg-gray-100 text-gray-600 rounded-full font-medium capitalize">
                     Plan: {userPlan}
                   </div>
-
-                  {/* SAVE BUTTON */}
-                  {isStepAllowed(activeStep) && (
-                    <Button
-                      onClick={handleSave}
-                      size="sm"
-                      className={cn(
-                        "h-8 px-4 text-xs font-medium rounded-full transition-all border-none shadow-none",
-                        completedSteps.includes(activeStep)
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-blue-600 hover:bg-blue-700 text-white"
-                      )}
-                    >
-                      {completedSteps.includes(activeStep) ? (
-                        <>
-                          <Check className="h-3 w-3 mr-1.5" /> Saved
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-3 w-3 mr-1.5" /> Save
-                        </>
-                      )}
-                    </Button>
-                  )}
+                  {/* SAVE BUTTON REMOVED AS REQUESTED */}
                 </div>
               </div>
 
-              {isSubscriptionLoading ? (
+              {isLoading ? (
                 <div className="flex-1 flex items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                 </div>
@@ -254,7 +237,7 @@ export default function ClientWrapper() {
         <div className="w-[320px] flex-shrink-0 h-full">
           <ChatbotStepper
             steps={steps}
-            stepDescriptions={STEP_DESCRIPTIONS} // Passing descriptions down
+            stepDescriptions={STEP_DESCRIPTIONS}
             activeStep={activeStep}
             setActiveStep={handleSidebarClick}
             completedSteps={completedSteps}

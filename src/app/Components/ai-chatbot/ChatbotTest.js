@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
-import { Send, Loader2, User as UserIcon, Bot } from "lucide-react"; // Removed extra icons
+import { Send, Loader2, User as UserIcon, Bot } from "lucide-react";
+// CONNECTED BACKEND: Using the API file you provided
 import { useTestChatbotMutation } from "@/redux/Chatbot/chatbotApi";
 
 export default function ChatbotTest({ activeStep, messages, setMessages }) {
@@ -11,6 +12,8 @@ export default function ChatbotTest({ activeStep, messages, setMessages }) {
   const [conversationId, setConversationId] = useState(null);
 
   useEffect(() => {
+    // Generate a new ID when switching steps to restart context if needed
+    // or keep one ID per step. For now, random on step change is safer.
     setConversationId(crypto.randomUUID());
   }, [activeStep]);
 
@@ -40,18 +43,24 @@ export default function ChatbotTest({ activeStep, messages, setMessages }) {
     setUserInput("");
 
     try {
-      const result = await testChatbot({
+      // 1. Prepare Payload for Backend
+      const payload = {
         messages: currentMessages,
         activeStep: activeStep,
         conversationId: conversationId,
-      }).unwrap();
+      };
 
+      // 2. Call the Mutation
+      const result = await testChatbot(payload).unwrap();
+
+      // 3. Handle Success
       const finalMessages = [
         ...currentMessages,
         { role: "assistant", content: result.response },
       ];
       setMessages(finalMessages);
     } catch (err) {
+      console.error("Chat Error:", err);
       const errorMessage = err.data?.message || "Failed to get a response.";
       toast.error(errorMessage);
     }
@@ -111,7 +120,7 @@ export default function ChatbotTest({ activeStep, messages, setMessages }) {
         </div>
       </div>
 
-      {/* Input Bar - CLEANED (No Smiley, Plus, Mic) */}
+      {/* Input Bar */}
       <form
         onSubmit={handleSubmit}
         className="px-4 py-4 bg-white flex items-center gap-3 z-10 flex-shrink-0 border-t border-gray-100"
@@ -127,7 +136,6 @@ export default function ChatbotTest({ activeStep, messages, setMessages }) {
           />
         </div>
 
-        {/* Send Button appears when typing, otherwise hidden/empty */}
         {userInput.trim() && (
           <button
             type="submit"
