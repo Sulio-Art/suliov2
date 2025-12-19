@@ -19,22 +19,20 @@ import {
   User,
   Lock,
   Loader2,
+  Users,
 } from "lucide-react";
 import LogoutButton from "../Reuseable/LogoutButton";
 
 export default function Sidebar({ isInstagramConnected }) {
   const pathname = usePathname();
   const { data: session, status: sessionStatus } = useSession();
-  const token = useSelector(selectBackendToken); 
+  const token = useSelector(selectBackendToken);
   const userId = session?.user?.id;
 
-  
-  const {
-    data: subscription,
-    isLoading: isSubscriptionLoading,
-  } = useGetMySubscriptionQuery(undefined, {
-    skip: sessionStatus !== "authenticated" || !token,
-  });
+  const { data: subscription, isLoading: isSubscriptionLoading } =
+    useGetMySubscriptionQuery(undefined, {
+      skip: sessionStatus !== "authenticated" || !token,
+    });
 
   const hasAccess = (featureKey) => {
     if (!subscription?.entitlements?.features) return false;
@@ -67,6 +65,11 @@ export default function Sidebar({ isInstagramConnected }) {
       icon: Layers,
       href: userId ? `/user/${userId}/transaction-management` : "#",
       feature: "transactionManagement",
+    },
+    {
+      title: "Customer Management",
+      icon: Users,
+      href: userId ? `/user/${userId}/customer-management` : "#",
     },
     {
       title: "Event Management",
