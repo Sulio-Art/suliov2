@@ -142,7 +142,7 @@ function Section({
             >
               {description.slice(
                 description.length / 2 - 1,
-                description.length
+                description.length,
               )}
             </p>
           </>

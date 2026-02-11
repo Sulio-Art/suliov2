@@ -29,7 +29,7 @@ export default function Hero() {
     setIsConnecting(true);
     try {
       const response = await fetch(
-        `${BACKEND_API_URL}/api/auth/instagram/auth-url?state=${state}`
+        `${BACKEND_API_URL}/api/auth/instagram/auth-url?state=${state}`,
       );
       const data = await response.json();
       if (!response.ok) {
@@ -87,7 +87,7 @@ export default function Hero() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, otp }),
-        }
+        },
       );
       const data = await response.json();
       if (!response.ok)
@@ -118,10 +118,9 @@ export default function Hero() {
     }
   };
 
-
   const renderGuestForm = () => (
     <form onSubmit={handleSubmit}>
-      <CardContent className="space-y-4 p-6">
+      <CardContent className="space-y-4 p-7">
         <div className="relative">
           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
@@ -133,16 +132,16 @@ export default function Hero() {
               setEmailExists(false);
             }}
             readOnly={showOtpInput}
-            className="pl-12 pr-4 py-6 rounded-full bg-gray-100 placeholder:text-gray-500"
+            className="pl-11 pr-4 py-6 rounded-full bg-gray-50 border-2 border-gray-200 focus:border-orange-500 placeholder:text-gray-500 text-base"
           />
           {emailExists && !showOtpInput && (
-            <div className="bg-blue-50 border border-blue-200 rounded px-2 py-1 mt-2 text-blue-700 text-sm flex items-center gap-1">
-              <span>🚩 You already have an account.</span>
+            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg px-3 py-2 mt-2 text-blue-800 text-sm flex items-center gap-2">
+              <span>🚩 Already have an account?</span>
               <Link
                 href="/auth/login"
-                className="font-semibold underline hover:text-blue-800"
+                className="font-bold underline hover:text-blue-900"
               >
-                Go to login
+                Login
               </Link>
             </div>
           )}
@@ -156,30 +155,30 @@ export default function Hero() {
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               maxLength={6}
-              className="pl-12 pr-4 py-6 rounded-full bg-gray-100 placeholder:text-gray-500"
+              className="pl-11 pr-4 py-6 rounded-full bg-gray-50 border-2 border-gray-200 focus:border-orange-500 placeholder:text-gray-500 text-base"
             />
           </div>
         )}
         <Button
           type="submit"
-          className="w-full bg-[#ff8c43] hover:bg-[#ff8c43]/90 text-white rounded-full py-4 h-auto text-base font-semibold"
+          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full py-6 h-auto text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
           disabled={isSubmitting || (emailExists && !showOtpInput)}
         >
           {isSubmitting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           ) : null}
           {showOtpInput ? "VERIFY & CONTINUE" : "TRY FOR FREE"}
         </Button>
-        <div className="flex items-center w-full !my-2">
-          <hr className="w-full border-gray-200" />
-          <span className="px-2 text-sm text-gray-400">Or</span>
-          <hr className="w-full border-gray-200" />
+        <div className="flex items-center w-full !my-3">
+          <hr className="w-full border-gray-300" />
+          <span className="px-3 text-sm text-gray-500 font-medium">Or</span>
+          <hr className="w-full border-gray-300" />
         </div>
         <Button
           type="button"
           onClick={() => handleInstagramAuth("login")}
           disabled={isConnecting}
-          className="w-full hover:scale-105 transition-transform duration-300 ease-in-out bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-4 h-auto text-base font-semibold flex gap-3 items-center justify-center"
+          className="w-full hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-6 h-auto text-base font-bold shadow-lg hover:shadow-xl flex gap-3 items-center justify-center"
         >
           {isConnecting ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -193,57 +192,67 @@ export default function Hero() {
   );
 
   const renderLoggedInView = () => (
-    <CardContent className="space-y-4 text-center p-6">
-      <h3 className="text-2xl font-bold">
-        You're all set, {session.user?.name}!
-      </h3>
-      <p className="text-gray-600">Ready to continue creating?</p>
+    <CardContent className="space-y-5 text-center p-7">
+      <div className="mb-2">
+        <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <CheckCircle2 className="h-10 w-10 text-white" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+          Welcome Back, {session.user?.name}!
+        </h3>
+        <p className="text-gray-600 text-base">Ready to continue creating?</p>
+      </div>
       <Link href={`/user/${session.user.id}/dashboard`}>
-        <Button className="w-full bg-[#ff8c43] hover:bg-[#ff8c43]/90 text-white rounded-full py-4 h-auto text-base font-semibold">
+        <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full py-6 h-auto text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
           GO TO DASHBOARD
         </Button>
       </Link>
       {session.isInstagramConnected ? (
-        <div className="flex items-center justify-center text-green-600 font-semibold pt-2">
-          <CheckCircle2 className="h-5 w-5 mr-2" />
-          Instagram Account Connected
+        <div className="flex items-center justify-center text-green-600 font-bold pt-2 text-base">
+          <CheckCircle2 className="h-6 w-6 mr-2" />
+          Instagram Connected
         </div>
       ) : (
         <Button
           onClick={() => handleInstagramAuth("connect")}
           disabled={isConnecting}
-          className="w-full hover:scale-105 transition-transform duration-300 ease-in-out bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-4 h-auto text-base font-semibold flex gap-3 items-center justify-center"
+          className="w-full hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-6 h-auto text-base font-bold shadow-lg hover:shadow-xl flex gap-3 items-center justify-center"
         >
           {isConnecting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           ) : (
             <FaInstagram size={22} />
           )}
-          Connect Your Instagram
+          Connect Instagram
         </Button>
       )}
     </CardContent>
   );
 
   const renderLoadingSkeleton = () => (
-    <CardContent className="flex items-center justify-center h-[348px]">
-      <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
+    <CardContent className="flex items-center justify-center h-[380px]">
+      <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
     </CardContent>
   );
 
   return (
-    <div className="min-h-screen md:px-2 snap-y snap-mandatory flex justify-center items-center">
-      <div className="gap-16 flex flex-col lg:flex-row justify-around items-center w-full max-w-6xl">
-        <div className="flex flex-col justify-start w-full lg:w-1/2">
-          <div className="text-left px-4">
-            <h1 className="text-4xl md:text-5xl font-bold">
-              Artists Using AI Assistants Have Increased Engagement by 85%.
+    <div className="bg-black text-white flex justify-center items-center py-10 md:py-12 min-h-[85vh]">
+      <div className="gap-8 flex flex-col lg:flex-row justify-between items-center w-full max-w-7xl px-6">
+        {/* LEFT SIDE - Text and Image */}
+        <div className="flex flex-col justify-start w-full lg:w-[55%]">
+          <div className="text-left space-y-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.05] text-white">
+              Artists Using AI Assistants Have{" "}
+              <span className="block text-orange-500">Increased</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600">
+                Engagement by 85%
+              </span>
             </h1>
-            <p className="py-3 text-md md:text-xl">
+            <p className="text-lg md:text-xl text-gray-300 leading-relaxed pt-2">
               Simplify your workflow, connect with buyers and focus on creating
               art.
             </p>
-            <div className="relative w-full aspect-video">
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl mt-6">
               <Image
                 src="/images/section1.gif"
                 alt="AI Assistant demonstration"
@@ -256,15 +265,17 @@ export default function Hero() {
             </div>
           </div>
         </div>
-        <div className="max-w-xs md:max-w-sm w-full space-y-4">
-          <Card className="bg-white text-black shrink-0 shadow-2xl rounded-3xl relative pt-12">
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-center -rotate-3 w-max">
-              <div className="bg-[#FBF2B3] px-4 py-2 rounded-xl shadow-md">
-                <span className="text-xl md:text-2xl font-extrabold text-[#ff8c43] block">
+
+        {/* RIGHT SIDE - Registration Form Card */}
+        <div className="w-full lg:w-[40%] flex flex-col items-center">
+          <Card className="bg-white text-black w-full max-w-md shadow-2xl rounded-3xl relative pt-14 border-2 border-gray-100">
+            <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-center -rotate-2 w-max z-10">
+              <div className="bg-yellow-400 px-5 py-2.5 rounded-xl shadow-lg border-2 border-white">
+                <span className="text-xl md:text-2xl font-black text-gray-900 block tracking-tight leading-tight">
                   {status === "authenticated" ? "WELCOME BACK!" : "SEE HOW AI"}
                 </span>
                 {status !== "authenticated" && (
-                  <span className="text-xl md:text-2xl font-extrabold text-[#ff8c43] block">
+                  <span className="text-xl md:text-2xl font-black text-gray-900 block tracking-tight leading-tight">
                     CHATBOT WORKS
                   </span>
                 )}
@@ -274,9 +285,10 @@ export default function Hero() {
             {status === "authenticated" && renderLoggedInView()}
             {status === "unauthenticated" && renderGuestForm()}
           </Card>
-          <p className="leading-tight text-lg px-10 text-center">
-            Start today and see upto 40% time-saving on client interations in
-            the first month!
+          <p className="leading-snug text-base px-4 text-center font-bold text-white mt-4">
+            Start today and see up to{" "}
+            <span className="text-orange-500 font-black">40% time-saving</span>{" "}
+            on client interactions in the first month!
           </p>
         </div>
       </div>
