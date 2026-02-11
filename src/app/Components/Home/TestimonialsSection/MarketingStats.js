@@ -1,8 +1,6 @@
 import React from "react";
-import Image from "next/image";
-import Link from "next/link";
-import Testimonials from "./Testimonials";
 import { Button } from "../../ui/button";
+import Link from "next/link";
 
 export default function MarketingStats() {
   const stats = [
@@ -25,40 +23,22 @@ export default function MarketingStats() {
   ];
 
   return (
-    <div className="w-full bg-gradient-to-br from-white to-gray-50">
-      <div className="max-w-7xl mx-auto">
-        {/* Testimonials Section */}
-        <div className="py-16">
-          <Testimonials />
-        </div>
-
-        {/* Stats Section - Enhanced */}
-        <section className="py-20 px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-black text-gray-900 mb-4">
-              Trusted by Artists{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-600">
-                Worldwide
-              </span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Join thousands of artists who are already transforming their
-              workflow
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 max-w-6xl mx-auto">
+    <div className="w-full bg-white py-20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        {/* Stats Section */}
+        <section className="mb-20">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 text-center transform hover:scale-105 border-2 border-gray-100"
+                className="text-center transform hover:scale-105 transition-transform duration-300"
               >
-                <div className="mb-6">
-                  <div className="text-5xl lg:text-6xl xl:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-purple-600 mb-2">
+                <div className="mb-4">
+                  <div className="text-5xl lg:text-6xl xl:text-7xl font-black text-gray-900 mb-2">
                     {stat.number}
                   </div>
                 </div>
-                <p className="text-sm lg:text-base text-gray-700 leading-snug font-semibold">
+                <p className="text-sm lg:text-base text-gray-700 leading-snug font-medium px-2">
                   {stat.text}
                 </p>
               </div>
@@ -66,34 +46,37 @@ export default function MarketingStats() {
           </div>
         </section>
 
-        {/* CTA Section - Enhanced */}
-        <section className="pb-20 px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-black via-gray-900 to-black text-white rounded-3xl overflow-hidden max-w-6xl mx-auto shadow-2xl border-2 border-gray-800">
-            <div className="p-10 lg:p-16 text-center space-y-8">
-              <div className="space-y-4">
-                <h2 className="text-4xl lg:text-5xl xl:text-6xl font-black leading-tight">
-                  Ready to Transform{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">
-                    Your Workflow?
-                  </span>
+        {/* CTA Section - Updated to match Figma */}
+        <section className="mt-16">
+          <div className="bg-black rounded-3xl py-12 lg:py-16 px-8 lg:px-16 shadow-2xl">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              {/* Left Content */}
+              <div className="text-center lg:text-left lg:max-w-2xl">
+                <h2 className="text-3xl lg:text-4xl xl:text-5xl font-black text-white mb-4 leading-tight">
+                  Ready to get started?
                 </h2>
-                <p className="text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto font-medium">
-                  Unlock up to 40% time savings in the first month with Sulio AI
+                <p className="text-base lg:text-lg xl:text-xl text-gray-300 leading-relaxed">
+                  Start today and see up to{" "}
+                  <span className="font-black text-orange-500">
+                    40% time-saving
+                  </span>{" "}
+                  on client interactions in the first month!
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-4">
+              {/* Right Button */}
+              <div className="flex flex-col items-center gap-4 flex-shrink-0">
                 <Link href="/auth/register">
-                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black py-7 px-12 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl text-lg lg:text-xl">
-                    Start Free Trial
+                  <Button className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 hover:from-yellow-500 hover:via-orange-500 hover:to-orange-600 text-black font-black py-6 px-16 lg:py-8 lg:px-20 rounded-full text-xl lg:text-2xl xl:text-3xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-3xl whitespace-nowrap">
+                    Try for Free
                   </Button>
                 </Link>
-              </div>
-
-              <div className="pt-4 space-y-2">
-                <p className="text-sm lg:text-base text-gray-400 font-medium">
-                  ✨ No credit card required • 30 days free • Cancel anytime
-                </p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <p className="text-base lg:text-lg text-gray-400 font-medium">
+                    30 days free trial
+                  </p>
+                </div>
               </div>
             </div>
           </div>

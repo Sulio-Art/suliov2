@@ -71,11 +71,11 @@ export default function Testimonials() {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious 
+          <CarouselPrevious
             className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-gray-100 rounded-full p-2 shadow-md z-20 transition-colors"
             variant="ghost"
           />
-          <CarouselNext 
+          <CarouselNext
             className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-gray-100 rounded-full p-2 shadow-md z-20 transition-colors"
             variant="ghost"
           />

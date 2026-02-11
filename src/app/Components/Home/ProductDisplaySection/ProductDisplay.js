@@ -32,6 +32,7 @@ function FeatureList({ features, color = "blue" }) {
 function Section({
   title,
   description,
+  leftSideBullets,
   features,
   color,
   imageSrc,
@@ -89,20 +90,42 @@ function Section({
   const getTabletAndDesktopContent = (layout) => {
     const titleFontSize = "text-[1.2rem] md:text-[1.6rem]";
     const descriptionFontSize =
-      "text-gray-400 text-lg leading-relaxed tracking-tight text-justify hyphens-auto [word-spacing:-1.5px] [letter-spacing:-0.3px] [text-align-last:left] max-w-prose";
+      "text-gray-300 text-base md:text-lg leading-relaxed";
     const paddingX = "px-4 md:px-6";
 
     const renderTitle = () => (
-      <Badge
-        variant="outline"
-        className={`${bgColors[color]} rounded-l-full ${paddingX} py-2 md:py-3 border-none hover:${bgColors[color]}`}
-      >
-        <h2
-          className={`text-white ${titleFontSize} h-12 md:h-16 font-medium text-center flex justify-center items-center`}
+      <div className="relative w-full flex items-center">
+        <div
+          className={`${bgColors[color]} rounded-l-full rounded-r-none ${paddingX} py-3 md:py-4 w-full flex items-center justify-center min-h-[4rem] md:min-h-[5rem]`}
         >
-          {title}
-        </h2>
-      </Badge>
+          <h2
+            className={`text-white ${titleFontSize} font-medium text-center leading-snug`}
+            style={{
+              wordWrap: "break-word",
+              overflowWrap: "break-word",
+              hyphens: "auto",
+            }}
+          >
+            {title}
+          </h2>
+        </div>
+      </div>
+    );
+
+    const renderDescription = () => (
+      <div className={`${paddingX} space-y-3`}>
+        <p className={`${descriptionFontSize} mb-4`}>{description}</p>
+        {leftSideBullets && leftSideBullets.length > 0 && (
+          <div className="space-y-2">
+            {leftSideBullets.map((bullet, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <span className="text-white text-lg mt-1">◆</span>
+                <p className={`${descriptionFontSize}`}>{bullet}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     );
 
     switch (layout) {
@@ -110,62 +133,34 @@ function Section({
         return (
           <>
             {renderTitle()}
-            <p
-              className={`text-gray-400 font-medium ${descriptionFontSize} ${paddingX} leading-relaxed`}
-            >
-              {description}
-            </p>
+            {renderDescription()}
           </>
         );
       case "top-middle-center":
         return (
           <>
             {renderTitle()}
-            <p
-              className={`text-gray-400 font-medium ${descriptionFontSize} ${paddingX} leading-relaxed`}
-            >
-              {description}
-            </p>
+            {renderDescription()}
           </>
         );
       case "middle":
         return (
           <>
-            <p
-              className={`text-gray-400 font-medium ${descriptionFontSize} ${paddingX} leading-relaxed`}
-            >
-              {description.slice(0, description.length / 2 - 1)}
-            </p>
+            {renderDescription()}
             {renderTitle()}
-            <p
-              className={`text-gray-400 font-medium ${descriptionFontSize} ${paddingX} leading-relaxed`}
-            >
-              {description.slice(
-                description.length / 2 - 1,
-                description.length,
-              )}
-            </p>
           </>
         );
       case "bottom-middle-center":
         return (
           <>
-            <p
-              className={`text-gray-400 font-medium ${descriptionFontSize} ${paddingX} leading-relaxed`}
-            >
-              {description}
-            </p>
+            {renderDescription()}
             {renderTitle()}
           </>
         );
       case "bottom":
         return (
           <>
-            <p
-              className={`text-gray-400 font-medium ${descriptionFontSize} ${paddingX} leading-relaxed`}
-            >
-              {description}
-            </p>
+            {renderDescription()}
             {renderTitle()}
           </>
         );
@@ -192,7 +187,7 @@ function Section({
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center">
+    <div className="min-h-screen w-full flex items-center bg-black">
       <div className="w-full h-full">
         <h1 className="text-xl md:text-3xl font-bold text-white text-center md:hidden pt-12 py-3 md:py-5 px-4 md:px-10">
           A Seamless Creative Workflow Powered by AI
@@ -214,13 +209,14 @@ function Section({
           <h1 className="text-4xl lg:text-5xl font-bold text-white text-center py-6 md:py-10">
             A Seamless Creative Workflow Powered by AI
           </h1>
-          <div className="grid md:grid-cols-4 pb-20 md:pb-40 pl-10 md:pl-20 h-full">
+          <div className="grid md:grid-cols-4 gap-0 pb-20 md:pb-40 pl-10 md:pl-20 pr-0 h-full">
             <div
-              className={`md:col-span-1 ${getTabletAndDesktopLayoutStyles(layout)}`}
+              className={`md:col-span-1 pr-0 flex flex-col ${getTabletAndDesktopLayoutStyles(layout)}`}
+              style={{ minWidth: "250px" }}
             >
               {getTabletAndDesktopContent(layout)}
             </div>
-            <Card className="md:col-span-3 bg-white grid grid-cols-1 md:grid-cols-2 border-none">
+            <Card className="md:col-span-3 bg-white grid grid-cols-1 md:grid-cols-2 border-none rounded-l-none">
               <CardContent className="h-full flex items-center p-0">
                 <FeatureList features={features} color={color} />
               </CardContent>
@@ -249,6 +245,12 @@ export default function ProductDisplaySection() {
       title: "Automate Follower Engagement",
       description:
         "Artists often struggle to keep up with interactions from new followers. Sulio AI automatically sends personalized greetings and updates based on follower behavior, so you can stay connected without spending too much time.",
+      leftSideBullets: [
+        "Send personalized greetings automatically",
+        "Engage followers based on their behavior",
+        "Maintain connections effortlessly",
+        "Save time on manual interactions",
+      ],
       features: [
         "Automatically send personalized greetings and updates to your followers.",
         "Boost engagement by up to 85%, even when you're not online.",
@@ -262,6 +264,12 @@ export default function ProductDisplaySection() {
       title: "Smart Art Recommendations",
       description:
         "Not sure which buyer will be interested in your work? Sulio AI recommends the right artworks based on buyer preferences, helping you sell faster and avoid unsold pieces.",
+      leftSideBullets: [
+        "AI analyzes buyer preferences",
+        "Match art to the right audience",
+        "Increase conversion rates",
+        "Reduce unsold inventory",
+      ],
       features: [
         "AI analyzes buyer preferences and recommends artworks that match their taste.",
         "Speed up sales by 20% by getting your art in front of the right buyers.",
@@ -275,6 +283,12 @@ export default function ProductDisplaySection() {
       title: "Transaction Tracking",
       description:
         "Managing sales and commissions can be overwhelming for artists. Sulio AI simplifies the process by keeping all your transactions and inquiries organized and visible in one place.",
+      leftSideBullets: [
+        "Centralized transaction management",
+        "Track commissions easily",
+        "100% payment transparency",
+        "Never miss a payment again",
+      ],
       features: [
         "Track all your sales and commissions in a single platform.",
         "Get 100% transparency into your sales and payment status.",
@@ -288,6 +302,12 @@ export default function ProductDisplaySection() {
       title: "Fraud Detection",
       description:
         "Dealing with fraud can be stressful, especially when your buyers are from different regions. Sulio AI automatically detects and blocks suspicious activities, protecting you from fraud and scams.",
+      leftSideBullets: [
+        "Automatic fraud detection",
+        "Block suspicious activities",
+        "95% fraud risk reduction",
+        "Focus on genuine buyers only",
+      ],
       features: [
         "AI automatically detects and blocks potential fraud attempts.",
         "Reduce the risk of fraud by 95%, allowing you to interact with real buyers confidently.",
@@ -301,6 +321,12 @@ export default function ProductDisplaySection() {
       title: "Streamlined Client Communication",
       description:
         "Handling multiple inquiries, after-sales support, and client communication can eat up valuable creative time. Sulio AI helps you manage all communications in one place, so you're not constantly answering the same questions.",
+      leftSideBullets: [
+        "Unified communication platform",
+        "Automate repetitive responses",
+        "25% time savings guaranteed",
+        "Professional client experience",
+      ],
       features: [
         "Manage client inquiries, sales questions, and after-sales support all in one platform.",
         "Save 25% of your time by automating repetitive client responses.",
@@ -313,7 +339,7 @@ export default function ProductDisplaySection() {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative bg-black">
       {sections.map((section, index) => (
         <div key={index} className="min-h-screen">
           <Section {...section} />
