@@ -3,6 +3,7 @@ import FAQSection from "./Components/Home/FrequentlyAskedQuestionsSection/FAQSec
 import Hero from "./Components/Home/HeroSection/Hero";
 import Navbar from "./Components/Home/Navbar/Navbar";
 import ProductDisplaySection from "./Components/Home/ProductDisplaySection/ProductDisplay";
+import Testimonials from "./Components/Home/TestimonialsSection/Testimonials";
 import MarketingStats from "./Components/Home/TestimonialsSection/MarketingStats";
 import VideoIntroduction from "./Components/Home/VideoIntroduction/VideoIntroduction";
 
@@ -12,6 +13,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <ProductDisplaySection />
+      <Testimonials />
       <MarketingStats />
       <FAQSection />
       <VideoIntroduction />

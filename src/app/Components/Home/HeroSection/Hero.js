@@ -161,7 +161,7 @@ export default function Hero() {
         )}
         <Button
           type="submit"
-          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full py-6 h-auto text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
+          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full py-6 h-auto text-lg font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
           disabled={isSubmitting || (emailExists && !showOtpInput)}
         >
           {isSubmitting ? (
@@ -178,7 +178,7 @@ export default function Hero() {
           type="button"
           onClick={() => handleInstagramAuth("login")}
           disabled={isConnecting}
-          className="w-full hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-6 h-auto text-base font-bold shadow-lg hover:shadow-xl flex gap-3 items-center justify-center"
+          className="w-full hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-6 h-auto text-lg font-bold shadow-lg hover:shadow-xl flex gap-3 items-center justify-center"
         >
           {isConnecting ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -216,7 +216,7 @@ export default function Hero() {
         <Button
           onClick={() => handleInstagramAuth("connect")}
           disabled={isConnecting}
-          className="w-full hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-6 h-auto text-base font-bold shadow-lg hover:shadow-xl flex gap-3 items-center justify-center"
+          className="w-full hover:scale-[1.02] transition-all duration-300 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full py-6 h-auto text-lg font-bold shadow-lg hover:shadow-xl flex gap-3 items-center justify-center"
         >
           {isConnecting ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -243,10 +243,7 @@ export default function Hero() {
           <div className="text-left space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.05] text-white">
               Artists Using AI Assistants Have{" "}
-              <span className="block text-orange-500">Increased</span>
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600">
-                Engagement by 85%
-              </span>
+              <span className="block">Increased Engagement by 85%.</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 leading-relaxed pt-2">
               Simplify your workflow, connect with buyers and focus on creating
@@ -269,13 +266,36 @@ export default function Hero() {
         {/* RIGHT SIDE - Registration Form Card */}
         <div className="w-full lg:w-[40%] flex flex-col items-center">
           <Card className="bg-white text-black w-full max-w-md shadow-2xl rounded-3xl relative pt-14 border-2 border-gray-100">
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-center -rotate-2 w-max z-10">
-              <div className="bg-yellow-400 px-5 py-2.5 rounded-xl shadow-lg border-2 border-white">
-                <span className="text-xl md:text-2xl font-black text-gray-900 block tracking-tight leading-tight">
+            <div
+              className="absolute -top-8 left-1/2 -translate-x-1/2 text-center w-max z-10"
+              style={{ transform: "translateX(-50%) rotate(-1deg)" }}
+            >
+              <div className="flex flex-col items-center">
+                <span
+                  className="text-[28px] md:text-[32px] font-extrabold block leading-none px-6 py-2 rounded-full"
+                  style={{
+                    color: "#FF8B5A",
+                    backgroundColor: "#FFEFB8",
+                    textShadow:
+                      "0.5px 0.5px 0 #FF8B5A, -0.5px -0.5px 0 #FF8B5A, 0.5px -0.5px 0 #FF8B5A, -0.5px 0.5px 0 #FF8B5A",
+                    fontWeight: "900",
+                    letterSpacing: "0.05em",
+                  }}
+                >
                   {status === "authenticated" ? "WELCOME BACK!" : "SEE HOW AI"}
                 </span>
                 {status !== "authenticated" && (
-                  <span className="text-xl md:text-2xl font-black text-gray-900 block tracking-tight leading-tight">
+                  <span
+                    className="text-[28px] md:text-[32px] font-extrabold block leading-none px-6 py-2 rounded-full -mt-2"
+                    style={{
+                      color: "#FF8B5A",
+                      backgroundColor: "#FFEFB8",
+                      textShadow:
+                        "0.5px 0.5px 0 #FF8B5A, -0.5px -0.5px 0 #FF8B5A, 0.5px -0.5px 0 #FF8B5A, -0.5px 0.5px 0 #FF8B5A",
+                      fontWeight: "900",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
                     CHATBOT WORKS
                   </span>
                 )}
@@ -285,10 +305,9 @@ export default function Hero() {
             {status === "authenticated" && renderLoggedInView()}
             {status === "unauthenticated" && renderGuestForm()}
           </Card>
-          <p className="leading-snug text-base px-4 text-center font-bold text-white mt-4">
-            Start today and see up to{" "}
-            <span className="text-orange-500 font-black">40% time-saving</span>{" "}
-            on client interactions in the first month!
+          <p className="leading-snug text-base px-4 text-center text-white mt-4">
+            Start today and see up to a 40% time-saving on client interactions
+            in the first month!
           </p>
         </div>
       </div>
