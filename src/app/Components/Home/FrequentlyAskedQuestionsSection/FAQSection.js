@@ -30,39 +30,131 @@ export default function FrequentlyAskedQuestions() {
   ];
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-center items-center lg:flex-row gap-0 bg-gradient-to-br from-gray-50 to-white py-20">
-      {/* Left Side - Title with Background */}
+    <div
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        width: "100%",
+        overflow: "hidden",
+      }}
+    >
+      {/* Background Image - Full Width */}
       <div
-        className="text-4xl md:text-5xl lg:text-6xl font-black h-auto lg:h-full w-full lg:w-[45%] bg-cover bg-center bg-no-repeat flex flex-col lg:flex-row py-16 lg:py-0"
-        style={{ backgroundImage: "url(/images/FAQ.gif)" }}
+        style={{
+          width: "100%",
+          height: "100vh",
+          backgroundImage: "url(/images/FAQ.gif)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+
+      {/* Diagonal Lines Pattern on Yellow Area - Clipped to stay within bounds */}
+      <svg
+        style={{
+          position: "absolute",
+          top: "0",
+          left: "0",
+          width: "38%",
+          height: "28%",
+          pointerEvents: "none",
+        }}
       >
-        <div className="h-full w-full flex font-black justify-center items-center text-center lg:text-left px-8 lg:px-12">
-          <div className="space-y-4">
-            <h2 className="text-gray-900 leading-tight">Frequently</h2>
-            <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 leading-tight">
-              Asked Questions
-            </h2>
-          </div>
-        </div>
+        <defs>
+          <pattern
+            id="diagonalLines"
+            patternUnits="userSpaceOnUse"
+            width="40"
+            height="40"
+            patternTransform="rotate(45)"
+          >
+            <line
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="40"
+              stroke="#0a3a3a"
+              strokeWidth="1.5"
+              opacity="0.3"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#diagonalLines)" />
+      </svg>
+
+      {/* Text Overlays on the Image */}
+      <div
+        style={{
+          position: "absolute",
+          top: "4%", // Changed from "8%" to "4%" - moved up
+          right: "65%",
+          width: "30%",
+          textAlign: "right",
+          color: "#4a4a4a",
+          fontSize: "1.2rem",
+          lineHeight: "1.6",
+          fontWeight: "400",
+        }}
+      >
+        Here are four common
+        <br />
+        questions that artists
+        <br />
+        might ask when using
+        <br />
+        Sulio's AI Chatbot
+        <br />
+        Assistant, along with
+        <br />
+        answers:
       </div>
 
-      {/* Right Side - FAQ Accordion */}
-      <div className="flex justify-center items-center h-full px-6 lg:px-12 py-12 lg:py-20 w-full lg:w-[55%]">
-        <Accordion
-          type="single"
-          collapsible
-          className="w-full max-w-3xl space-y-6"
-        >
+      <div
+        style={{
+          position: "absolute",
+          top: "32%",
+          left: "8%",
+          width: "30%",
+          color: "#ffffff",
+          fontSize: "3.5rem",
+          fontWeight: "900",
+          lineHeight: "1.1",
+          textTransform: "uppercase",
+        }}
+      >
+        FREQUENTLY ASKED QUESTIONS SECTION
+      </div>
+
+      {/* FAQ Accordion - Overlaid on Right Side */}
+      <div
+        style={{
+          position: "absolute",
+          top: "0",
+          right: "0",
+          width: "60%",
+          minHeight: "120vh",
+          padding: "4rem 5rem",
+          backgroundColor: "#f9fafb",
+          borderRadius: "0",
+          boxShadow: "-10px 0 30px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <Accordion type="single" collapsible className="w-full space-y-4">
           {faqData.map((faq, index) => (
             <AccordionItem
               key={`faq-${index}`}
               value={`item-${index}`}
-              className="border-2 border-gray-200 rounded-2xl px-6 lg:px-8 bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:border-orange-300"
+              className="bg-white shadow-sm hover:shadow-md transition-all duration-300"
+              style={{
+                border: "2px solid #d1d5db",
+                borderRadius: "1.5rem",
+              }}
             >
-              <AccordionTrigger className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 text-left hover:no-underline py-6 hover:text-orange-600 transition-colors">
+              <AccordionTrigger className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 text-left hover:no-underline py-6 px-6 lg:px-8 transition-colors">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="pb-6">
+              <AccordionContent className="pb-6 px-6 lg:px-8">
                 <p className="text-base md:text-lg lg:text-xl text-gray-700 leading-relaxed">
                   <span className="font-black text-orange-600">Answer: </span>
                   {faq.answer}
