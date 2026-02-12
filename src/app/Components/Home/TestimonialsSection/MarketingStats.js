@@ -66,7 +66,7 @@ export default function MarketingStats() {
 
               {/* Right Button */}
               <div className="flex flex-col items-center gap-4 flex-shrink-0">
-                <Link href="/auth/register">
+                <Link href="#navbar">
                   <Button className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 hover:from-yellow-500 hover:via-orange-500 hover:to-orange-600 text-black font-black py-6 px-16 lg:py-8 lg:px-20 rounded-full text-xl lg:text-2xl xl:text-3xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-3xl whitespace-nowrap">
                     Try for Free
                   </Button>
