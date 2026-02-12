@@ -1,3 +1,4 @@
+/*
 "use client";
 
 import { useParams } from "next/navigation";
@@ -44,4 +45,9 @@ export default function EditEventPage() {
       <CreateEventForm eventData={eventData} />
     </div>
   );
+}
+*/
+
+export default function EditEventPage() {
+  return null;
 }

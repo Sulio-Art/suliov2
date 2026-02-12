@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils";
 import {
   LayoutGrid,
   Palette,
-  BookOpen,
+  // BookOpen,
   Bot,
   CreditCard,
   Layers,
-  Calendar,
+  // Calendar,
   User,
   Lock,
   Loader2,
@@ -50,11 +50,13 @@ export default function Sidebar({ isInstagramConnected }) {
       icon: Palette,
       href: userId ? `/user/${userId}/artwork-management` : "#",
     },
+    /*
     {
       title: "Daily Diary",
       icon: BookOpen,
       href: userId ? `/user/${userId}/daily-diary` : "#",
     },
+    */
     {
       title: "AI Chatbot",
       icon: Bot,
@@ -71,11 +73,13 @@ export default function Sidebar({ isInstagramConnected }) {
       icon: Users,
       href: userId ? `/user/${userId}/customer-management` : "#",
     },
+    /*
     {
       title: "Event Management",
       icon: Calendar,
       href: userId ? `/user/${userId}/event-management` : "#",
     },
+    */
     {
       title: "Subscription",
       icon: CreditCard,
@@ -85,7 +89,7 @@ export default function Sidebar({ isInstagramConnected }) {
   ];
 
   const mainItems = allItems.filter(
-    (item) => !item.feature || hasAccess(item.feature)
+    (item) => !item.feature || hasAccess(item.feature),
   );
 
   if (sessionStatus === "loading" || (token && isSubscriptionLoading)) {
@@ -120,13 +124,13 @@ export default function Sidebar({ isInstagramConnected }) {
                 isActive
                   ? "bg-blue-50 text-blue-700"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
-                isLocked && "opacity-50 pointer-events-none"
+                isLocked && "opacity-50 pointer-events-none",
               )}
             >
               <item.icon
                 className={cn(
                   "h-5 w-5",
-                  isActive ? "text-blue-700" : "text-gray-400"
+                  isActive ? "text-blue-700" : "text-gray-400",
                 )}
               />
               <span>{item.title}</span>
@@ -141,7 +145,7 @@ export default function Sidebar({ isInstagramConnected }) {
             "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all",
             pathname.includes("/profile")
               ? "bg-blue-50 text-blue-700"
-              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
           )}
         >
           {session?.user?.image ? (
@@ -158,7 +162,7 @@ export default function Sidebar({ isInstagramConnected }) {
                 "h-5 w-5",
                 pathname.includes("/profile")
                   ? "text-blue-700"
-                  : "text-gray-400"
+                  : "text-gray-400",
               )}
             />
           )}

@@ -1,3 +1,4 @@
+/*
 import CreateEventForm from "../../../../Components/event-management/CreateEventForm";
 
 export default function CreateNewEventPage() {
@@ -6,4 +7,9 @@ export default function CreateNewEventPage() {
       <CreateEventForm />
     </div>
   );
+}
+*/
+
+export default function CreateNewEventPage() {
+  return null;
 }

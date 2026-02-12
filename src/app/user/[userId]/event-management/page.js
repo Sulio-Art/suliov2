@@ -1,3 +1,4 @@
+/*
 import ClientWrapper from "./client-wrapper";
 import SubscriptionGuard from "@/app/Components/Reuseable/SubscitpionGuard";
 
@@ -7,4 +8,9 @@ export default function EventManagementPage() {
       <ClientWrapper />
     </SubscriptionGuard>
   );
+}
+*/
+
+export default function EventManagementPage() {
+  return null;
 }

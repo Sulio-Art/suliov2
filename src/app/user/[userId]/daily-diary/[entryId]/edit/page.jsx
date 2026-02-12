@@ -1,3 +1,4 @@
+/*
 import NewDiaryForm from "../../../../../Components/DailyDiary/NewDiaryForm";
 
 export default function EditDiaryPage() {
@@ -6,4 +7,9 @@ export default function EditDiaryPage() {
       <NewDiaryForm />
     </div>
   );
+}
+*/
+
+export default function EditDiaryPage() {
+  return null;
 }
