@@ -15,8 +15,8 @@ export default function Home() {
       <ProductDisplaySection />
       <Testimonials />
       <MarketingStats />
-      <FAQSection />
       <VideoIntroduction />
+      <FAQSection />
       <LandingPage />
     </main>
   );

@@ -180,7 +180,8 @@ function Section({
       case "bottom-middle-center":
         return "flex flex-col justify-center space-y-3 md:space-y-6";
       case "bottom":
-        return "flex flex-col justify-end space-y-3 md:space-y-6";
+        // Changed justify-end to justify-center and added pb-32 to move it up
+        return "flex flex-col justify-center space-y-3 md:space-y-6 pb-32";
       default:
         return "flex flex-col space-y-3 md:space-y-6";
     }
@@ -189,8 +190,9 @@ function Section({
   return (
     <div className="min-h-screen w-full flex items-center bg-black">
       <div className="w-full h-full">
-        <h1 className="text-xl md:text-3xl font-bold text-white text-center md:hidden pt-12 py-3 md:py-5 px-4 md:px-10">
-          A Seamless Creative Workflow Powered by AI
+        <h1 className="text-xl md:text-3xl font-bold text-white text-center md:hidden pt-12 py-3 md:py-5 px-4 md:px-10 leading-tight">
+          A Seamless Creative Workflow <br className="block" />
+          Powered by AI
         </h1>
         <div
           className="md:hidden min-h-screen flex flex-col justify-center py-10 px-4 relative"
@@ -206,8 +208,9 @@ function Section({
         </div>
 
         <div className="hidden md:block h-screen">
-          <h1 className="text-4xl lg:text-5xl font-bold text-white text-center py-6 md:py-10">
-            A Seamless Creative Workflow Powered by AI
+          <h1 className="text-4xl lg:text-5xl font-bold text-white text-center py-6 md:py-10 leading-tight">
+            A Seamless Creative Workflow <br className="hidden lg:block" />
+            Powered by AI
           </h1>
           <div className="grid md:grid-cols-4 gap-0 pb-20 md:pb-40 pl-10 md:pl-20 pr-0 h-full">
             <div
@@ -216,11 +219,11 @@ function Section({
             >
               {getTabletAndDesktopContent(layout)}
             </div>
-            <Card className="md:col-span-3 bg-white grid grid-cols-1 md:grid-cols-2 border-none rounded-l-none">
+            <Card className="md:col-span-3 bg-white grid grid-cols-1 md:grid-cols-2 border-none rounded-l-none p-0 h-full overflow-hidden">
               <CardContent className="h-full flex items-center p-0">
                 <FeatureList features={features} color={color} />
               </CardContent>
-              <div className="relative h-full">
+              <div className="relative h-full w-full">
                 <Image
                   src={imageSrc || "/placeholder.svg"}
                   alt={title}

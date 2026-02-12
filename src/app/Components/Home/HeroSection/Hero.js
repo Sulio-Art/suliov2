@@ -239,11 +239,10 @@ export default function Hero() {
     <div className="bg-black text-white flex justify-center items-center py-10 md:py-12 min-h-[85vh]">
       <div className="gap-8 flex flex-col lg:flex-row justify-between items-center w-full max-w-7xl px-6">
         {/* LEFT SIDE - Text and Image */}
-        <div className="flex flex-col justify-start w-full lg:w-[55%]">
+        <div className="flex flex-col justify-start w-full lg:w-[60%]">
           <div className="text-left space-y-4">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.05] text-white">
-              Artists Using AI Assistants Have{" "}
-              <span className="block">Increased Engagement by 85%.</span>
+            <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold leading-[1.05] text-white">
+              Artists Using AI Assistants Have Increased Engagement by 85%.
             </h1>
             <p className="text-lg md:text-xl text-gray-300 leading-relaxed pt-2">
               Simplify your workflow, connect with buyers and focus on creating
@@ -264,7 +263,7 @@ export default function Hero() {
         </div>
 
         {/* RIGHT SIDE - Registration Form Card */}
-        <div className="w-full lg:w-[40%] flex flex-col items-center">
+        <div className="w-full lg:w-[38%] flex flex-col items-center">
           <Card className="bg-white text-black w-full max-w-md shadow-2xl rounded-3xl relative pt-14 border-2 border-gray-100">
             <div
               className="absolute -top-8 left-1/2 -translate-x-1/2 text-center w-max z-10"
@@ -278,7 +277,7 @@ export default function Hero() {
                     backgroundColor: "#FFEFB8",
                     textShadow:
                       "0.5px 0.5px 0 #FF8B5A, -0.5px -0.5px 0 #FF8B5A, 0.5px -0.5px 0 #FF8B5A, -0.5px 0.5px 0 #FF8B5A",
-                    fontWeight: "900",
+                    fontWeight: "800",
                     letterSpacing: "0.05em",
                   }}
                 >
@@ -292,7 +291,7 @@ export default function Hero() {
                       backgroundColor: "#FFEFB8",
                       textShadow:
                         "0.5px 0.5px 0 #FF8B5A, -0.5px -0.5px 0 #FF8B5A, 0.5px -0.5px 0 #FF8B5A, -0.5px 0.5px 0 #FF8B5A",
-                      fontWeight: "900",
+                      fontWeight: "800",
                       letterSpacing: "0.05em",
                     }}
                   >
