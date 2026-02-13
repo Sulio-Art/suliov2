@@ -42,15 +42,14 @@ export default function Navbar() {
         </Link>
       </div>
 
-      <div className="hidden md:block">
+      <div>
         <Link
           href="/auth/login"
-          className="px-4 py-2 rounded-md text-sm font-medium bg-[#ff8c43] hover:bg-[#ff8c43]/90"
+          className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-md text-sm font-medium bg-[#ff8c43] hover:bg-[#ff8c43]/90"
         >
           Login
         </Link>
       </div>
-      {/* )} */}
     </div>
   );
 }

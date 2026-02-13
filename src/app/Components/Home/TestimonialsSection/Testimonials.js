@@ -59,9 +59,11 @@ export default function Testimonials() {
   const handleDotClick = (index) => setCurrentIndex(index);
 
   return (
-    <div className="w-full bg-white pb-10">
-      <div className="grid grid-cols-12 items-stretch w-full h-[240px] md:h-[300px]">
-        <div className="col-span-2 relative overflow-hidden">
+    <div className="w-full bg-white pb-10 overflow-hidden">
+      {/* Container: Stacked on mobile, grid on tablet/desktop */}
+      <div className="flex flex-col md:grid md:grid-cols-12 items-center md:items-stretch w-full min-h-[300px] md:h-[350px] lg:h-[300px]">
+        {/* Left Decoration - Hidden on mobile, visible on tablet+ */}
+        <div className="hidden md:block md:col-span-2 relative overflow-hidden">
           <Image
             src="/images/1.png"
             alt="Decoration Left"
@@ -72,20 +74,22 @@ export default function Testimonials() {
           />
         </div>
 
-        <div className="col-span-8 relative flex items-center px-4 md:px-12">
+        {/* Main Content Box */}
+        <div className="col-span-12 md:col-span-8 relative flex items-center px-6 md:px-10 lg:px-12 py-8 md:py-0">
           <div
-            className="relative w-full flex items-center bg-white px-10 md:px-20 py-10 md:py-14"
+            className="relative w-full flex items-center bg-white px-6 md:px-12 lg:px-20 py-10 md:py-14"
             style={{ border: "7px solid #4A3728" }}
           >
+            {/* Left Quote - Adjusted position for mobile */}
             <div
-              className="absolute bg-white px-2"
+              className="absolute bg-white px-1 md:px-2"
               style={{
-                left: "-1.8rem",
-                top: "35%",
-                transform: "translateY(-50%)",
+                left: "-1.2rem",
+                top: "20%",
+                transform: "translateX(0)",
               }}
             >
-              <span className="text-[#4A3728] font-serif font-black text-6xl md:text-8xl leading-[0]">
+              <span className="text-[#4A3728] font-serif font-black text-5xl md:text-7xl lg:text-8xl leading-none">
                 &#8220;
               </span>
             </div>
@@ -97,7 +101,7 @@ export default function Testimonials() {
               >
                 {testimonials.map((t, i) => (
                   <div key={i} className="w-full flex-shrink-0">
-                    <p className="text-lg md:text-xl lg:text-2xl text-gray-900 leading-relaxed font-medium">
+                    <p className="text-base md:text-lg lg:text-2xl text-gray-900 leading-relaxed font-medium">
                       {t.content}
                     </p>
                   </div>
@@ -105,22 +109,24 @@ export default function Testimonials() {
               </div>
             </div>
 
+            {/* Right Quote - Adjusted position for mobile */}
             <div
-              className="absolute bg-white px-2"
+              className="absolute bg-white px-1 md:px-2"
               style={{
-                right: "-1.8rem",
-                bottom: "35%",
-                transform: "translateY(50%)",
+                right: "-1.2rem",
+                bottom: "20%",
+                transform: "translateX(0)",
               }}
             >
-              <span className="text-[#4A3728] font-serif font-black text-6xl md:text-8xl leading-[0]">
+              <span className="text-[#4A3728] font-serif font-black text-5xl md:text-7xl lg:text-8xl leading-none">
                 &#8221;
               </span>
             </div>
           </div>
         </div>
 
-        <div className="col-span-2 relative overflow-hidden">
+        {/* Right Decoration - Hidden on mobile, visible on tablet+ */}
+        <div className="hidden md:block md:col-span-2 relative overflow-hidden">
           <Image
             src="/images/3.png"
             alt="Decoration Right"
@@ -133,15 +139,16 @@ export default function Testimonials() {
         </div>
       </div>
 
-      <div className="flex justify-center items-center gap-4 mt-8">
+      {/* Pagination Dots */}
+      <div className="flex justify-center items-center gap-3 md:gap-4 mt-8">
         {testimonials.map((_, index) => (
           <button
             key={index}
             onClick={() => handleDotClick(index)}
             className={`transition-all duration-300 rounded-full border-2 border-black ${
               currentIndex === index
-                ? "bg-[#00A859] border-[#00A859] w-5 h-5 md:w-6 md:h-6"
-                : "bg-transparent w-3 h-3 md:w-4 md:h-4"
+                ? "bg-[#00A859] border-[#00A859] w-4 h-4 md:w-6 md:h-6"
+                : "bg-transparent w-2.5 h-2.5 md:w-4 md:h-4"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

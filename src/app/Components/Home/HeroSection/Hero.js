@@ -120,7 +120,7 @@ export default function Hero() {
 
   const renderGuestForm = () => (
     <form onSubmit={handleSubmit}>
-      <CardContent className="space-y-4 p-7">
+      <CardContent className="space-y-4 p-5 sm:p-7 pb-7 sm:pb-8">
         <div className="relative">
           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
@@ -192,7 +192,7 @@ export default function Hero() {
   );
 
   const renderLoggedInView = () => (
-    <CardContent className="space-y-5 text-center p-7">
+    <CardContent className="space-y-5 text-center p-5 sm:p-7 pb-7 sm:pb-8">
       <div className="mb-2">
         <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full mx-auto mb-4 flex items-center justify-center">
           <CheckCircle2 className="h-10 w-10 text-white" />
@@ -237,14 +237,14 @@ export default function Hero() {
 
   return (
     <div className="bg-black text-white flex justify-center items-center py-10 md:py-12 min-h-[85vh]">
-      <div className="gap-8 flex flex-col lg:flex-row justify-between items-center w-full max-w-7xl px-6">
+      <div className="gap-8 flex flex-col lg:flex-row justify-between items-center w-full max-w-7xl px-4 sm:px-6">
         {/* LEFT SIDE - Text and Image */}
         <div className="flex flex-col justify-start w-full lg:w-[60%]">
           <div className="text-left space-y-4">
-            <h1 className="text-4xl md:text-5xl lg:text-5xl font-extrabold leading-[1.05] text-white">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-extrabold leading-[1.05] text-white">
               Artists Using AI Assistants Have Increased Engagement by 85%.
             </h1>
-            <p className="text-lg md:text-xl text-gray-300 leading-relaxed pt-2">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed pt-2">
               Simplify your workflow, connect with buyers and focus on creating
               art.
             </p>
@@ -264,14 +264,14 @@ export default function Hero() {
 
         {/* RIGHT SIDE - Registration Form Card */}
         <div className="w-full lg:w-[38%] flex flex-col items-center">
-          <Card className="bg-white text-black w-full max-w-md shadow-2xl rounded-3xl relative pt-14 border-2 border-gray-100">
+          <Card className="bg-white text-black w-full max-w-md shadow-2xl rounded-3xl relative pt-14 pb-2 border-2 border-gray-100">
             <div
               className="absolute -top-8 left-1/2 -translate-x-1/2 text-center w-max z-10"
               style={{ transform: "translateX(-50%) rotate(-1deg)" }}
             >
               <div className="flex flex-col items-center">
                 <span
-                  className="text-[28px] md:text-[32px] font-extrabold block leading-none px-6 py-2 rounded-full"
+                  className="text-[22px] sm:text-[28px] md:text-[32px] font-extrabold block leading-none px-4 sm:px-6 py-2 rounded-full"
                   style={{
                     color: "#FF8B5A",
                     backgroundColor: "#FFEFB8",
@@ -285,7 +285,7 @@ export default function Hero() {
                 </span>
                 {status !== "authenticated" && (
                   <span
-                    className="text-[28px] md:text-[32px] font-extrabold block leading-none px-6 py-2 rounded-full -mt-2"
+                    className="text-[22px] sm:text-[28px] md:text-[32px] font-extrabold block leading-none px-4 sm:px-6 py-2 rounded-full -mt-2"
                     style={{
                       color: "#FF8B5A",
                       backgroundColor: "#FFEFB8",
@@ -304,7 +304,7 @@ export default function Hero() {
             {status === "authenticated" && renderLoggedInView()}
             {status === "unauthenticated" && renderGuestForm()}
           </Card>
-          <p className="leading-snug text-base px-4 text-center text-white mt-4">
+          <p className="leading-snug text-sm sm:text-base px-4 text-center text-white mt-4">
             Start today and see up to a 40% time-saving on client interactions
             in the first month!
           </p>

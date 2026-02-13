@@ -55,29 +55,31 @@ function Section({
 
   const getMobileContent = () => {
     return (
-      <div className="bg-white rounded-3xl shadow-lg p-6 max-w-[90%] mx-auto">
-        <div className="text-center mb-6">
+      <div className="bg-white rounded-3xl shadow-lg p-5 sm:p-6 w-[92%] mx-auto">
+        <div className="text-center mb-4 sm:mb-6">
           <Badge
             variant="outline"
-            className={`${bgColors[color]} rounded-full px-4 py-2 border-none hover:${bgColors[color]}`}
+            className={`${bgColors[color]} rounded-2xl px-4 py-2 border-none hover:${bgColors[color]} whitespace-normal max-w-full inline-flex justify-center`}
           >
-            <h2 className="text-white text-xl font-medium">{title}</h2>
+            <h2 className="text-white text-base sm:text-xl font-medium text-center leading-snug">
+              {title}
+            </h2>
           </Badge>
         </div>
 
-        <p className="text-gray-800 font-medium text-base mb-8 leading-relaxed text-center">
+        <p className="text-gray-800 font-medium text-sm sm:text-base mb-5 sm:mb-8 leading-relaxed text-center">
           {description}
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {features.map((feature, index) => (
             <div key={index} className="flex gap-2">
               <div
-                className={`${diamondColors[color]} md:text-3xl text-xl flex-shrink-0 mt-1`}
+                className={`${diamondColors[color]} text-lg sm:text-xl flex-shrink-0 mt-1`}
               >
                 ◆
               </div>
-              <p className="text-black font-medium leading-tight text-sm md:text-xl lg:text-2xl">
+              <p className="text-black font-medium leading-tight text-sm sm:text-base">
                 {feature}
               </p>
             </div>
@@ -188,14 +190,11 @@ function Section({
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center bg-black">
+    <div className="md:min-h-screen w-full flex items-center bg-black">
       <div className="w-full h-full">
-        <h1 className="text-xl md:text-3xl font-bold text-white text-center md:hidden pt-12 py-3 md:py-5 px-4 md:px-10 leading-tight">
-          A Seamless Creative Workflow <br className="block" />
-          Powered by AI
-        </h1>
+        {/* MOBILE VIEW */}
         <div
-          className="md:hidden min-h-screen flex flex-col justify-center py-10 px-4 relative"
+          className="md:hidden min-h-screen flex flex-col justify-center py-8 px-3 sm:px-4 relative"
           style={{
             backgroundImage: `url(${imageSrc})`,
             backgroundSize: "cover",
@@ -203,10 +202,11 @@ function Section({
             backgroundRepeat: "no-repeat",
           }}
         >
-          <div className="absolute inset-0 bg-black opacity-50"></div>
+          <div className="absolute inset-0 bg-black opacity-60"></div>
           <div className="relative z-10">{getMobileContent()}</div>
         </div>
 
+        {/* DESKTOP VIEW */}
         <div className="hidden md:block h-screen">
           <h1 className="text-4xl lg:text-5xl font-bold text-white text-center py-6 md:py-10 leading-tight">
             A Seamless Creative Workflow <br className="hidden lg:block" />
@@ -343,8 +343,12 @@ export default function ProductDisplaySection() {
 
   return (
     <div className="relative bg-black">
+      <h1 className="md:hidden text-xl sm:text-2xl font-bold text-white text-center pt-10 pb-4 px-6 leading-tight">
+        A Seamless Creative Workflow <br />
+        Powered by AI
+      </h1>
       {sections.map((section, index) => (
-        <div key={index} className="min-h-screen">
+        <div key={index} className="md:min-h-screen">
           <Section {...section} />
         </div>
       ))}
