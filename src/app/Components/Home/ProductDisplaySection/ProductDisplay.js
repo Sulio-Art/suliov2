@@ -12,15 +12,15 @@ function FeatureList({ features, color = "blue" }) {
   };
 
   return (
-    <div className="space-y-3 md:space-y-4 py-3 md:py-4 h-full md:flex flex-col justify-evenly px-4 md:px-8">
+    <div className="space-y-2 md:space-y-3 py-2 md:py-3 h-full md:flex flex-col justify-evenly px-4 md:px-8">
       {features.map((feature, index) => (
         <div key={index} className="flex gap-2">
           <div
-            className={`${diamondColors[color]} md:text-3xl text-xl flex-shrink-0 mt-1`}
+            className={`${diamondColors[color]} md:text-2xl lg:text-3xl text-xl flex-shrink-0 mt-1`}
           >
             ◆
           </div>
-          <p className="text-black font-medium leading-tight text-sm md:text-xl lg:text-2xl">
+          <p className="text-black font-medium leading-tight text-sm md:text-lg lg:text-2xl">
             {feature}
           </p>
         </div>
@@ -45,21 +45,18 @@ function Section({
     orange: "bg-orange-500",
     green: "bg-green-500",
   };
-  const diamondColors = {
-    blue: "text-blue-600",
-    purple: "text-purple-600",
-    yellow: "text-yellow-500",
-    orange: "text-orange-500",
-    green: "text-green-500",
-  };
 
   const getMobileContent = () => {
+    const badgeColorClass = bgColors[color] || "bg-gray-600";
+    const diamondColorClass =
+      bgColors[color]?.replace("bg-", "text-") || "text-gray-600";
+
     return (
       <div className="bg-white rounded-3xl shadow-lg p-5 sm:p-6 w-[92%] mx-auto">
         <div className="text-center mb-4 sm:mb-6">
           <Badge
             variant="outline"
-            className={`${bgColors[color]} rounded-2xl px-4 py-2 border-none hover:${bgColors[color]} whitespace-normal max-w-full inline-flex justify-center`}
+            className={`${badgeColorClass} rounded-2xl px-4 py-2 border-none hover:${badgeColorClass} whitespace-normal max-w-full inline-flex justify-center`}
           >
             <h2 className="text-white text-base sm:text-xl font-medium text-center leading-snug">
               {title}
@@ -75,7 +72,7 @@ function Section({
           {features.map((feature, index) => (
             <div key={index} className="flex gap-2">
               <div
-                className={`${diamondColors[color]} text-lg sm:text-xl flex-shrink-0 mt-1`}
+                className={`${diamondColorClass} text-lg sm:text-xl flex-shrink-0 mt-1`}
               >
                 ◆
               </div>
@@ -90,15 +87,19 @@ function Section({
   };
 
   const getTabletAndDesktopContent = (layout) => {
-    const titleFontSize = "text-[1.2rem] md:text-[1.6rem]";
+    // FIX 1: Reduced 'md' font size to 'text-xl' to prevent overflow on long words like "Recommendations"
+    const titleFontSize = "text-xl md:text-xl lg:text-2xl xl:text-4xl";
     const descriptionFontSize =
-      "text-gray-300 text-base md:text-lg leading-relaxed";
+      "text-gray-300 text-base md:text-lg lg:text-xl leading-relaxed";
     const paddingX = "px-4 md:px-6";
+    const headerBgClass = bgColors[color] || "bg-gray-600";
 
     const renderTitle = () => (
       <div className="relative w-full flex items-center">
         <div
-          className={`${bgColors[color]} rounded-l-full rounded-r-none ${paddingX} py-3 md:py-4 w-full flex items-center justify-center min-h-[4rem] md:min-h-[5rem]`}
+          // FIX 2: Changed to 'h-auto' (implied) and added sufficient vertical padding (py-3 md:py-4).
+          // This allows the container to grow taller if the text wraps.
+          className={`${headerBgClass} rounded-l-full rounded-r-none ${paddingX} py-3 md:py-4 xl:py-5 w-full flex items-center justify-center min-h-[3.5rem]`}
         >
           <h2
             className={`text-white ${titleFontSize} font-medium text-center leading-snug`}
@@ -115,13 +116,17 @@ function Section({
     );
 
     const renderDescription = () => (
-      <div className={`${paddingX} space-y-3`}>
-        <p className={`${descriptionFontSize} mb-4`}>{description}</p>
+      <div className={`${paddingX} space-y-2 md:space-y-3 xl:space-y-4`}>
+        <p className={`${descriptionFontSize} mb-1 md:mb-1 xl:mb-2`}>
+          {description}
+        </p>
         {leftSideBullets && leftSideBullets.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-1 md:space-y-1 xl:space-y-2">
             {leftSideBullets.map((bullet, index) => (
               <div key={index} className="flex items-start gap-2">
-                <span className="text-white text-lg mt-1">◆</span>
+                <span className="text-white text-base md:text-lg xl:text-xl mt-1">
+                  ◆
+                </span>
                 <p className={`${descriptionFontSize}`}>{bullet}</p>
               </div>
             ))}
@@ -130,62 +135,28 @@ function Section({
       </div>
     );
 
-    switch (layout) {
-      case "top":
-        return (
-          <>
-            {renderTitle()}
-            {renderDescription()}
-          </>
-        );
-      case "top-middle-center":
-        return (
-          <>
-            {renderTitle()}
-            {renderDescription()}
-          </>
-        );
-      case "middle":
-        return (
-          <>
-            {renderDescription()}
-            {renderTitle()}
-          </>
-        );
-      case "bottom-middle-center":
-        return (
-          <>
-            {renderDescription()}
-            {renderTitle()}
-          </>
-        );
-      case "bottom":
-        return (
-          <>
-            {renderDescription()}
-            {renderTitle()}
-          </>
-        );
-      default:
-        return null;
-    }
+    return (
+      <>
+        {renderTitle()}
+        {renderDescription()}
+      </>
+    );
   };
 
-  const getTabletAndDesktopLayoutStyles = (layout) => {
+  const getFlexAlignment = (layout) => {
     switch (layout) {
       case "top":
-        return "relative top-0 space-y-3 md:space-y-6";
+        return "justify-center xl:justify-start xl:pt-4";
       case "top-middle-center":
-        return "relative top-1/4 space-y-3 md:space-y-6";
+        return "justify-center xl:pt-10";
       case "middle":
-        return "flex flex-col justify-center space-y-3 md:space-y-6";
+        return "justify-center";
       case "bottom-middle-center":
-        return "flex flex-col justify-center space-y-3 md:space-y-6";
+        return "justify-center xl:pb-10";
       case "bottom":
-        // Changed justify-end to justify-center and added pb-32 to move it up
-        return "flex flex-col justify-center space-y-3 md:space-y-6 pb-32";
+        return "justify-center xl:justify-end xl:pb-4";
       default:
-        return "flex flex-col space-y-3 md:space-y-6";
+        return "justify-center";
     }
   };
 
@@ -206,24 +177,28 @@ function Section({
           <div className="relative z-10">{getMobileContent()}</div>
         </div>
 
-        {/* DESKTOP VIEW */}
-        <div className="hidden md:block h-screen">
-          <h1 className="text-4xl lg:text-5xl font-bold text-white text-center py-6 md:py-10 leading-tight">
+        {/* DESKTOP & TABLET VIEW */}
+        <div className="hidden md:flex flex-col min-h-screen w-full py-6 md:py-10">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-center py-4 md:py-8 leading-tight flex-shrink-0 z-20">
             A Seamless Creative Workflow <br className="hidden lg:block" />
             Powered by AI
           </h1>
-          <div className="grid md:grid-cols-4 gap-0 pb-20 md:pb-40 pl-10 md:pl-20 pr-0 h-full">
+
+          <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-0 pl-4 md:pl-10 xl:pl-20 pr-0 flex-1">
             <div
-              className={`md:col-span-1 pr-0 flex flex-col ${getTabletAndDesktopLayoutStyles(layout)}`}
-              style={{ minWidth: "250px" }}
+              className={`md:col-span-1 pr-0 flex flex-col ${getFlexAlignment(
+                layout,
+              )} space-y-2 md:space-y-4 xl:space-y-6`}
+              style={{ minWidth: "220px" }}
             >
               {getTabletAndDesktopContent(layout)}
             </div>
-            <Card className="md:col-span-3 bg-white grid grid-cols-1 md:grid-cols-2 border-none rounded-l-none p-0 h-full overflow-hidden">
+
+            <Card className="md:col-span-2 lg:col-span-3 bg-white grid grid-cols-1 md:grid-cols-2 border-none rounded-l-none p-0 min-h-[500px] overflow-hidden">
               <CardContent className="h-full flex items-center p-0">
                 <FeatureList features={features} color={color} />
               </CardContent>
-              <div className="relative h-full w-full">
+              <div className="relative h-full w-full min-h-[300px]">
                 <Image
                   src={imageSrc || "/placeholder.svg"}
                   alt={title}
@@ -247,7 +222,7 @@ export default function ProductDisplaySection() {
     {
       title: "Automate Follower Engagement",
       description:
-        "Artists often struggle to keep up with interactions from new followers. Sulio AI automatically sends personalized greetings and updates based on follower behavior, so you can stay connected without spending too much time.",
+        "Artists often struggle to keep up with interactions from new followers. Sulio AI automatically sends personalized greetings and updates based on follower behavior.",
       leftSideBullets: [
         "Send personalized greetings automatically",
         "Engage followers based on their behavior",
@@ -304,7 +279,7 @@ export default function ProductDisplaySection() {
     {
       title: "Fraud Detection",
       description:
-        "Dealing with fraud can be stressful, especially when your buyers are from different regions. Sulio AI automatically detects and blocks suspicious activities, protecting you from fraud and scams.",
+        "Dealing with fraud can be stressful. Sulio AI automatically detects and blocks suspicious activities, protecting you from fraud and scams.",
       leftSideBullets: [
         "Automatic fraud detection",
         "Block suspicious activities",
@@ -323,7 +298,7 @@ export default function ProductDisplaySection() {
     {
       title: "Streamlined Client Communication",
       description:
-        "Handling multiple inquiries, after-sales support, and client communication can eat up valuable creative time. Sulio AI helps you manage all communications in one place, so you're not constantly answering the same questions.",
+        "Handling multiple inquiries and client communication can eat up valuable creative time. Sulio AI helps you manage all communications in one place.",
       leftSideBullets: [
         "Unified communication platform",
         "Automate repetitive responses",
@@ -343,12 +318,13 @@ export default function ProductDisplaySection() {
 
   return (
     <div className="relative bg-black">
-      <h1 className="md:hidden text-xl sm:text-2xl font-bold text-white text-center pt-10 pb-4 px-6 leading-tight">
-        A Seamless Creative Workflow <br />
-        Powered by AI
-      </h1>
       {sections.map((section, index) => (
-        <div key={index} className="md:min-h-screen">
+        <div key={index} className="w-full">
+          {/* MOBILE HEADER FIX: Ensure it appears before every section on mobile */}
+          <h1 className="md:hidden text-xl sm:text-2xl font-bold text-white text-center pt-10 pb-4 px-6 leading-tight">
+            A Seamless Creative Workflow <br />
+            Powered by AI
+          </h1>
           <Section {...section} />
         </div>
       ))}

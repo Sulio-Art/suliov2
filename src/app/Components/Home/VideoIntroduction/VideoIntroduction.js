@@ -7,7 +7,8 @@ export default function VideoIntroduction() {
     <div className="relative overflow-hidden bg-black w-full">
       {/* Header section */}
       <div className="relative px-4 sm:px-6 lg:px-12 pt-12 sm:pt-20 pb-8 sm:pb-12 h-auto bg-black z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 items-center relative z-10 max-w-7xl mx-auto">
+        {/* TEXT SECTION: Changed z-index to 30 to bring it to the front */}
+        <div className="grid grid-cols-1 md:grid-cols-12 items-center relative z-30 max-w-7xl mx-auto">
           <div className="md:col-span-8 space-y-4 pr-0 sm:pr-44 md:pr-0">
             <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
               People won't be replaced by AI, but by those who use it.
@@ -16,7 +17,8 @@ export default function VideoIntroduction() {
         </div>
 
         {/* GIF Overlay - desktop only */}
-        <div className="hidden md:block absolute right-0 top-12 w-[420px] overflow-visible pointer-events-none z-20">
+        {/* CHANGED: Lowered z-index to 0 to push it behind the text */}
+        <div className="hidden md:block absolute right-0 top-12 w-[420px] overflow-visible pointer-events-none z-0">
           <div className="relative w-full">
             <Image
               src="/images/section4overlay.gif"
@@ -33,7 +35,8 @@ export default function VideoIntroduction() {
         </div>
 
         {/* Mobile decorative icons */}
-        <div className="absolute right-3 top-12 sm:top-20 md:hidden">
+        {/* CHANGED: Added z-0 to ensure mobile icons also stay behind text */}
+        <div className="absolute right-3 top-12 sm:top-20 md:hidden z-0">
           <Image
             src="/images/section4overlay.gif"
             alt="Decorative icons"
@@ -49,7 +52,7 @@ export default function VideoIntroduction() {
         <Card className="rounded-3xl bg-gradient-to-br from-black via-gray-900 to-black text-white border-4 border-gray-800 overflow-hidden shadow-2xl">
           <CardContent className="p-0">
             {/* On tablets (md), we use items-stretch to make both columns equal height.
-               This prevents the text side from being shorter than the video side.
+                This prevents the text side from being shorter than the video side.
             */}
             <div className="grid grid-cols-1 md:grid-cols-12 items-stretch">
               {/* Video Section - First on mobile, left side on desktop */}
