@@ -58,7 +58,7 @@ function InstagramCallbackHandler() {
               Authorization: `Bearer ${session.backendToken}`,
             },
             body: JSON.stringify({ code }),
-          }
+          },
         );
 
         const data = await response.json();
@@ -86,19 +86,24 @@ function InstagramCallbackHandler() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code }),
-          }
+          },
         );
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
 
-        if (response.status === 200 && data.token && data.user) {
-          dispatch(setCredentials({ user: data.user, token: data.token }));
+        if (response.status === 200 && data.backendToken && data.user) {
+          dispatch(
+            setCredentials({
+              user: data.user,
+              backendToken: data.backendToken,
+            }),
+          );
 
           const result = await signIn("credentials", {
             data: JSON.stringify({
               user: data.user,
-              token: data.token,
+              backendToken: data.backendToken,
             }),
             redirect: false,
           });
@@ -119,7 +124,7 @@ function InstagramCallbackHandler() {
           router.push("/auth/register");
         } else {
           throw new Error(
-            "An unexpected response was received from the server."
+            "An unexpected response was received from the server.",
           );
         }
       } catch (err) {
