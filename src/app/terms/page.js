@@ -48,7 +48,7 @@ export default function TermsOfService() {
                 TERMS OF SERVICE
               </div>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 text-slate-900">
-                Sulio AI Chatbot
+                SulioArt Curator
               </h1>
               <p className="text-slate-500 text-lg font-medium">
                 Terms of Service (v1.4)
@@ -96,7 +96,7 @@ export default function TermsOfService() {
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
                 <ul className="grid md:grid-cols-1 gap-4 text-base text-slate-700">
                   <li>
-                    <strong>“Service”</strong> refers to Sulio AI Chatbot and
+                    <strong>“Service”</strong> refers to SulioArt Curator and
                     all related tools, interfaces, dashboards, modules,
                     websites, and features provided by Sulio Art Co., Ltd.
                   </li>

@@ -8,7 +8,7 @@ export default function CallToAction() {
           The all-in-one solution for artists to elevate their business with AI
         </h2>
         <p className="mt-4 text-lg text-gray-300">
-          Sulio AI Chatbot Assistant helps artists automate client interactions,
+          SulioArt Curator Assistant helps artists automate client interactions,
           manage sales, and enhance their engagement—seamlessly.
         </p>
         <div className="mt-8">

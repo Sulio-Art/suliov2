@@ -10,6 +10,10 @@ export function generateMetadata() {
   return {
     title: "AI Artist Platform",
     description: "Manage and showcase your artwork",
+    icons: {
+      icon: "/images/SulioCurator_logo.png",
+      shortcut: "/images/SulioCurator_logo.ico",
+    },
     other: {
       ...Sentry.getTraceData(),
     },

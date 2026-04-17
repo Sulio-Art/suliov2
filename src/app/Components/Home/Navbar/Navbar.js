@@ -27,7 +27,7 @@ export default function Navbar() {
           >
             <Image
               alt="Sulio Art Logo"
-              src="/images/logo.png"
+              src="/images/SulioCurator_logo.png"
               height={100}
               width={100}
               quality={100}

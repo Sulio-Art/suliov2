@@ -86,7 +86,7 @@ export default function PrivacyPolicy() {
               </div>
               <p className="mb-4">
                 Sulio Art Co., Ltd. (“the Company,” “we,” “us,” or “our”)
-                operates the Sulio AI Chatbot and related digital tools (“the
+                operates the SulioArt Curator and related digital tools (“the
                 Service”), designed to support artists, galleries, and creative
                 professionals in communication automation, artwork
                 recommendation, lead management, verification workflows, and

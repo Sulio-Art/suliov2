@@ -73,7 +73,7 @@ export default function CookiePolicy() {
                     Applies To
                   </span>
                   <span className="text-slate-900 font-medium">
-                    sulio-art.com, Sulio AI Chatbot, dashboards, and associated
+                    sulio-art.com, SulioArt Curator, dashboards, and associated
                     web properties
                   </span>
                 </div>

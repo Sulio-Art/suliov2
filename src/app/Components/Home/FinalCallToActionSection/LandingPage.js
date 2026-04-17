@@ -47,7 +47,7 @@ export default function LandingPage() {
               with AI
             </h1>
             <p className="text-gray-200 text-base sm:text-lg md:text-xl font-medium leading-relaxed max-w-3xl mx-auto px-2">
-              Sulio AI Chatbot Assistant helps artists automate client
+              SulioArt Curator Assistant helps artists automate client
               interactions, manage sales, and enhance their engagement—giving
               you more time to create. Seamlessly integrate AI into your
               workflow and experience the freedom to focus on what matters most:
@@ -126,7 +126,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
               <Image
-                src="/images/logo.png"
+                src="/images/SulioCurator_logo.png"
                 alt="Sulio Art Logo"
                 width={50}
                 height={50}
@@ -197,7 +197,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-3 lg:gap-4 font-bold text-lg lg:text-xl">
               <Image
                 alt="Sulio Art Logo"
-                src="/images/logo.png"
+                src="/images/SulioCurator_logo.png"
                 height={100}
                 width={100}
                 quality={100}
