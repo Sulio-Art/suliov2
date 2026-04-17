@@ -111,7 +111,7 @@ export default function Sidebar({ isInstagramConnected }) {
             width={200}
             quality={100}
             priority
-            className="w-20 h-auto object-contain"
+            className="w-33 h-auto object-contain"
           />
         </Link>
       </div>
