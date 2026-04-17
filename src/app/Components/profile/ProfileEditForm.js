@@ -24,10 +24,10 @@ export default function ProfileEditForm({ profile, onSave, onCancel }) {
   const [profilePictureFile, setProfilePictureFile] = useState(null);
   const [coverPhotoFile, setCoverPhotoFile] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState(
-    profile?.profilePicture || "https://i.imgur.com/6VBx3io.png"
+    profile?.profilePicture || null,
   );
   const [coverPhotoPreview, setCoverPhotoPreview] = useState(
-    profile?.coverPhoto || "https://i.imgur.com/8V254hN.png"
+    profile?.coverPhoto || null,
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -94,7 +94,7 @@ export default function ProfileEditForm({ profile, onSave, onCancel }) {
                 src={profilePicturePreview}
                 alt="Profile preview"
                 onError={(e) => {
-                  e.target.src = "https://i.imgur.com/6VBx3io.png";
+                  e.target.src = "";
                 }}
                 className="mt-2 w-32 h-32 rounded-full object-cover border-2 border-gray-200"
               />
@@ -135,7 +135,7 @@ export default function ProfileEditForm({ profile, onSave, onCancel }) {
                   src={coverPhotoPreview}
                   alt="Cover preview"
                   onError={(e) => {
-                    e.target.src = "https://i.imgur.com/8V254hN.png";
+                    e.target.src = "";
                   }}
                   className="w-full h-full object-cover"
                 />
