@@ -7,9 +7,8 @@ export default function ProfileHeader({ profile, isEditing, setIsEditing }) {
     ? `${profile.userId.firstName ?? ""} ${profile.userId.lastName ?? ""}`.trim() ||
       "Artist"
     : "Artist";
-  const coverPhoto = profile?.coverPhoto?.trim() || "";
-  const profilePicture =
-    profile?.profilePicture?.trim() || "https://i.imgur.com/6VBx3io.png";
+  const coverPhoto = profile?.coverPhoto?.trim() || null;
+  const profilePicture = profile?.profilePicture?.trim() || null;
 
   // Add bottom margin to accommodate the overlapping profile picture
   return (
@@ -36,16 +35,21 @@ export default function ProfileHeader({ profile, isEditing, setIsEditing }) {
         <div className="flex items-end space-x-4 md:space-x-6">
           {/* Profile Picture - overlapping the cover photo */}
           <div className="relative h-24 w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 rounded-full ring-4 ring-white bg-gray-200 overflow-hidden shadow-lg flex-shrink-0">
-            <Image
-              src={profilePicture}
-              alt="Profile picture"
-              fill
-              style={{ objectFit: "cover" }}
-              className="rounded-full"
-              onError={(e) => {
-                e.target.src = "https://i.imgur.com/6VBx3io.png";
-              }}
-            />
+            {profilePicture ? (
+              <Image
+                src={profilePicture}
+                alt="Profile picture"
+                fill
+                style={{ objectFit: "cover" }}
+                className="rounded-full"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-300 rounded-full flex items-center justify-center">
+                <span className="text-gray-500 text-3xl font-bold">
+                  {fullName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Name positioned next to profile picture */}
