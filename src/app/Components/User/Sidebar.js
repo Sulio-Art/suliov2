@@ -104,9 +104,15 @@ export default function Sidebar({ isInstagramConnected }) {
     <div className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col">
       <div className="p-4 flex justify-center py-8">
         <Link href={userId ? `/user/${userId}/dashboard` : "#"}>
-          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">
-            <span className="text-white font-bold text-xl">AI</span>
-          </div>
+          <Image
+            alt="Sulio Art Logo"
+            src="/images/SulioCurator_logo.png"
+            height={200}
+            width={200}
+            quality={100}
+            priority
+            className="w-20 h-auto object-contain"
+          />
         </Link>
       </div>
 

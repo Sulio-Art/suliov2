@@ -128,16 +128,16 @@ export default function LandingPage() {
               <Image
                 src="/images/SulioCurator_logo.png"
                 alt="Sulio Art Logo"
-                width={50}
-                height={50}
-                className="object-contain w-12 h-12 sm:w-14 sm:h-14"
+                width={180}
+                height={180}
+                className="object-contain w-20 h-20 sm:w-24 sm:h-24"
               />
               <div className="text-left">
                 <span className="font-black text-gray-900 text-base sm:text-lg block">
                   Sulio Art
                 </span>
                 <span className="text-gray-600 text-xs sm:text-sm font-semibold">
-                  Artist AI Chatbot
+                  Curator
                 </span>
               </div>
             </div>
@@ -198,18 +198,14 @@ export default function LandingPage() {
               <Image
                 alt="Sulio Art Logo"
                 src="/images/SulioCurator_logo.png"
-                height={100}
-                width={100}
+                height={500}
+                width={500}
                 quality={100}
                 priority
-                className="h-full w-14 md:w-16 lg:w-20 object-cover"
+                className="h-auto w-20 md:w-24 lg:w-32 object-contain"
               />
               <span className="font-black text-gray-900 text-left leading-tight">
-                Sulio Art
-                <br />
-                <span className="text-gray-600 text-sm lg:text-base font-semibold">
-                  Artist AI Chatbot
-                </span>
+                SulioArt Curator
               </span>
             </div>
 

@@ -28,15 +28,14 @@ export default function Navbar() {
             <Image
               alt="Sulio Art Logo"
               src="/images/SulioCurator_logo.png"
-              height={100}
-              width={100}
+              height={200}
+              width={200}
               quality={100}
               priority
-              className="h-full w-12 md:w-20 object-cover"
+              className="h-full w-16 md:w-24 object-cover"
             />
             <div className="flex flex-col items-start">
-              <span>Sulio Art</span>
-              <span>Artist AI ChatBot</span>
+              <span>SulioArt Curator</span>
             </div>
           </Button>
         </Link>
