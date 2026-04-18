@@ -13,7 +13,7 @@ export default function FrequentlyAskedQuestions() {
         "Sulio AI helps by automatically engaging with potential buyers and recommending your art based on their preferences. Many artists see a 20-30% increase in sales within the first few months by leveraging the chatbot to build deeper connections with their audience.",
     },
     {
-      question: "Do I need any technical skills to use the AI chatbot?",
+      question: "Do I need any technical skills to use the SulioArt Curator?",
       answer:
         "No technical skills are required! Sulio AI is designed to be user-friendly and intuitive. With pre-configured templates and easy-to-follow guides, you can get set up in minutes, allowing you to focus on your art while we handle the rest.",
     },

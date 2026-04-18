@@ -82,7 +82,7 @@ export default function PricingComparison() {
           Compare Plans <ChevronDown className="w-5 h-5" />
         </button>
         <h2 className="text-2xl font-bold mb-8">
-          Find the right Sulio Art AI Chatbot Assistant for you
+          Find the right SulioArt Curator Assistant for you
         </h2>
       </div>
 

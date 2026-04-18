@@ -1,7 +1,9 @@
 import { Button } from "../Components/ui/button";
-import { featureList, planDetails } from "../Components/subscription/planDetails";
-import { Check, X } from "lucide-react"; 
-
+import {
+  featureList,
+  planDetails,
+} from "../Components/subscription/planDetails";
+import { Check, X } from "lucide-react";
 
 const FeatureValue = ({ value }) => {
   if (value === "✓") {
@@ -22,7 +24,7 @@ export default function ComparisonTable() {
         </Button>
       </div>
       <h2 className="text-center text-3xl font-bold mb-10">
-        Find the right Sulio Art AI Chatbot Assistant for you
+        Find the right SulioArt Curatot for you
       </h2>
 
       <div className="overflow-x-auto">

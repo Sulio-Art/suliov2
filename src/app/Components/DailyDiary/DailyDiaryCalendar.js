@@ -102,7 +102,7 @@ const DiaryTag = ({ category, subject }) => (
       "text-xs px-2 py-1 rounded-md overflow-hidden text-ellipsis whitespace-nowrap",
       category === "For Sale"
         ? "bg-red-100 text-red-700"
-        : "bg-sky-100 text-sky-700"
+        : "bg-sky-100 text-sky-700",
     )}
   >
     {subject || "Diary Entry"}
@@ -113,7 +113,7 @@ export default function DailyDiaryCalendar() {
   const token = useSelector(selectBackendToken);
   const { data: diaryEntries = [], isLoading } = useGetMyDiaryEntriesQuery(
     undefined,
-    { skip: !token }
+    { skip: !token },
   );
   const [deleteDiaryEntry, { isLoading: isDeleting }] =
     useDeleteDiaryEntryMutation();
@@ -157,7 +157,7 @@ export default function DailyDiaryCalendar() {
   const endDate = endOfWeek(monthEnd);
   const days = eachDayOfInterval({ start: startDate, end: endDate });
   const totalEntriesThisMonth = diaryEntries.filter((entry) =>
-    isSameMonth(parseISO(entry.date), currentMonth)
+    isSameMonth(parseISO(entry.date), currentMonth),
   ).length;
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -168,8 +168,8 @@ export default function DailyDiaryCalendar() {
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Daily Diary</h1>
             <p className="text-gray-500 mt-1">
-              Our AI chatbot will use the diary contents to reply to the
-              potential customers.
+              Our Curator will use the diary contents to reply to the potential
+              customers.
             </p>
           </div>
           {/* Main "New Diary" button - Links to today automatically */}
@@ -222,7 +222,7 @@ export default function DailyDiaryCalendar() {
               {days.map((day) => {
                 const dayStr = format(day, "yyyy-MM-dd");
                 const entriesForDay = diaryEntries.filter((entry) =>
-                  isSameDay(parseISO(entry.date), day)
+                  isSameDay(parseISO(entry.date), day),
                 );
                 const dayHasEntries = entriesForDay.length > 0;
                 const hasMultipleEntries = entriesForDay.length > 1;
@@ -235,7 +235,7 @@ export default function DailyDiaryCalendar() {
                     <HoverCardTrigger asChild>
                       <div
                         className={cn(
-                          "p-2 flex flex-col items-start border-r border-b border-gray-200 relative group cursor-pointer hover:bg-gray-50 transition-colors h-full"
+                          "p-2 flex flex-col items-start border-r border-b border-gray-200 relative group cursor-pointer hover:bg-gray-50 transition-colors h-full",
                         )}
                         style={{ background: "white" }}
                       >
@@ -244,7 +244,7 @@ export default function DailyDiaryCalendar() {
                             "text-sm",
                             !isSameMonth(day, currentMonth) && "text-gray-300",
                             isSameDay(day, today) &&
-                              "h-7 w-7 rounded-full bg-blue-600 text-white flex items-center justify-center"
+                              "h-7 w-7 rounded-full bg-blue-600 text-white flex items-center justify-center",
                           )}
                         >
                           {format(day, "d")}
@@ -301,7 +301,7 @@ export default function DailyDiaryCalendar() {
                                     entry={entry}
                                     onEdit={() =>
                                       router.push(
-                                        `/user/${userId}/daily-diary/${entry._id}/edit`
+                                        `/user/${userId}/daily-diary/${entry._id}/edit`,
                                       )
                                     }
                                     onDelete={() => openDeleteDialog(entry)}
@@ -316,7 +316,7 @@ export default function DailyDiaryCalendar() {
                               entry={entriesForDay[0]}
                               onEdit={() =>
                                 router.push(
-                                  `/user/${userId}/daily-diary/${entriesForDay[0]._id}/edit`
+                                  `/user/${userId}/daily-diary/${entriesForDay[0]._id}/edit`,
                                 )
                               }
                               onDelete={() =>

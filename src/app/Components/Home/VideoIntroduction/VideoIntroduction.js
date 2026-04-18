@@ -75,9 +75,9 @@ export default function VideoIntroduction() {
               {/* Product Info - Second on mobile, right side on desktop */}
               <div className="md:col-span-5 lg:col-span-4 order-2 flex flex-col justify-center p-6 sm:p-8 lg:p-12 text-center md:text-left bg-gradient-to-br from-blue-600/20 to-purple-600/20">
                 <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 text-2xl sm:text-3xl lg:text-5xl font-black mb-3 sm:mb-6 leading-tight">
-                  Sulio Art
+                  SulioArt
                   <br />
-                  Artist AI Chatbot
+                  Curator
                 </h2>
                 <p className="text-base sm:text-lg lg:text-xl font-medium text-gray-200 leading-relaxed">
                   Meet Sulio Art's all-in-one product experience AI Chatbot,
