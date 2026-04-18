@@ -147,32 +147,29 @@ export default function LandingPage() {
           <div className="flex gap-5 sm:gap-6">
             <Button
               variant="ghost"
-              size="icon"
               asChild
-              className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full h-12 w-12 sm:h-auto sm:w-auto"
+              className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full h-12 w-12 sm:h-auto sm:w-auto [&_svg]:w-8 [&_svg]:h-8"
             >
               <a href="#" aria-label="Instagram">
-                <Instagram className="w-6 h-6 text-gray-700 hover:text-orange-600" />
+                <Instagram className="w-9 h-9 text-gray-700 hover:text-orange-600" />
               </a>
             </Button>
             <Button
               variant="ghost"
-              size="icon"
               asChild
-              className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full h-12 w-12 sm:h-auto sm:w-auto"
+              className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full h-12 w-12 sm:h-auto sm:w-auto [&_svg]:w-8 [&_svg]:h-8"
             >
               <a href="#" aria-label="Facebook">
-                <Facebook className="w-6 h-6 text-gray-700 hover:text-orange-600" />
+                <Facebook className="w-9 h-9 text-gray-700 hover:text-orange-600" />
               </a>
             </Button>
             <Button
               variant="ghost"
-              size="icon"
               asChild
-              className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full h-12 w-12 sm:h-auto sm:w-auto"
+              className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full h-12 w-12 sm:h-auto sm:w-auto [&_svg]:w-8 [&_svg]:h-8"
             >
               <a href="#" aria-label="Email">
-                <Mail className="w-6 h-6 text-gray-700 hover:text-orange-600" />
+                <Mail className="w-9 h-9 text-gray-700 hover:text-orange-600" />
               </a>
             </Button>
           </div>
@@ -204,41 +201,35 @@ export default function LandingPage() {
                 priority
                 className="h-auto w-20 md:w-24 lg:w-32 object-contain"
               />
-              <span className="font-black text-gray-900 text-left leading-tight">
-                SulioArt Curator
-              </span>
             </div>
 
             {/* Social Links */}
             <div className="flex gap-3 lg:gap-4 text-gray-700">
               <Button
                 variant="ghost"
-                size="icon"
                 asChild
-                className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full"
+                className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full [&_svg]:w-8 [&_svg]:h-8"
               >
                 <a href="#" aria-label="Instagram">
-                  <Instagram className="w-6 h-6 hover:text-orange-600" />
+                  <Instagram className="w-9 h-9 hover:text-orange-600" />
                 </a>
               </Button>
               <Button
                 variant="ghost"
-                size="icon"
                 asChild
-                className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full"
+                className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full [&_svg]:w-8 [&_svg]:h-8"
               >
                 <a href="#" aria-label="Facebook">
-                  <Facebook className="w-6 h-6 hover:text-orange-600" />
+                  <Facebook className="w-9 h-9 hover:text-orange-600" />
                 </a>
               </Button>
               <Button
                 variant="ghost"
-                size="icon"
                 asChild
-                className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full"
+                className="hover:scale-110 transition-transform hover:bg-orange-100 rounded-full [&_svg]:w-8 [&_svg]:h-8"
               >
                 <a href="#" aria-label="Email">
-                  <Mail className="w-6 h-6 hover:text-orange-600" />
+                  <Mail className="w-9 h-9 hover:text-orange-600" />
                 </a>
               </Button>
             </div>

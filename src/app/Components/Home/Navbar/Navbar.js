@@ -32,11 +32,8 @@ export default function Navbar() {
               width={200}
               quality={100}
               priority
-              className="h-full w-16 md:w-24 object-cover"
+              className="h-full w-17 md:w-25 object-cover"
             />
-            <div className="flex flex-col items-start">
-              <span>SulioArt Curator</span>
-            </div>
           </Button>
         </Link>
       </div>
