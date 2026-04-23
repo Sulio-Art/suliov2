@@ -2,21 +2,13 @@
 
 import { useSelector, useDispatch } from "react-redux";
 import { signOut } from "next-auth/react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../ui/dialog";
 import { Button } from "../ui/button";
 import {
   selectIsUnsavedChangesDialogOpen,
   closeUnsavedChangesDialog,
 } from "@/redux/UI/uiSlice";
 
-const CHAT_HISTORY_STORAGE_KEY = 'sulioV2TestChatHistories';
+const CHAT_HISTORY_STORAGE_KEY = "sulioV2TestChatHistories";
 
 export default function UnsavedChangesDialog() {
   const dispatch = useDispatch();
@@ -36,24 +28,26 @@ export default function UnsavedChangesDialog() {
     dispatch(closeUnsavedChangesDialog());
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleCancel}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>You have unsaved changes</DialogTitle>
-          <DialogDescription>
-            If you log out now, any changes you've made will be lost. Are you sure you want to proceed?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center transform transition-all">
+        <h2 className="text-xl font-bold text-gray-900">
+          Are you sure you want to log out?
+        </h2>
+        <div className="mt-6 flex gap-3 justify-center">
+          <Button variant="outline" onClick={handleCancel} className="flex-1">
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleProceed}>
-            Log Out Anyway
+          <Button
+            onClick={handleProceed}
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+          >
+            Log Out
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 }

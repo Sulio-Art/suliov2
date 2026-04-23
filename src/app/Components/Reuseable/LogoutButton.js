@@ -1,29 +1,15 @@
 "use client";
 
-import { signOut } from "next-auth/react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { LogOut } from "lucide-react";
 import { Button } from "../ui/button";
-import { selectIsFormDirty, openUnsavedChangesDialog } from "@/redux/UI/uiSlice";
-
-const CHAT_HISTORY_STORAGE_KEY = 'sulioV2TestChatHistories';
+import { openUnsavedChangesDialog } from "@/redux/UI/uiSlice";
 
 export default function LogoutButton() {
   const dispatch = useDispatch();
-  const isFormDirty = useSelector(selectIsFormDirty);
 
-  const handleLogout = async () => {
-    if (isFormDirty) {
-      dispatch(openUnsavedChangesDialog());
-      return;
-    }
-    
-    try {
-      localStorage.removeItem(CHAT_HISTORY_STORAGE_KEY);
-      await signOut({ callbackUrl: "/auth/login" });
-    } catch (error) {
-      console.error("Failed to logout:", error);
-    }
+  const handleLogout = () => {
+    dispatch(openUnsavedChangesDialog());
   };
 
   return (

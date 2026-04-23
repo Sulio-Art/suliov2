@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Toaster, toast } from "react-hot-toast";
-import { signIn } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useDispatch } from "react-redux";
 import {
   useLoginMutation,
@@ -56,6 +56,7 @@ const resetSchema = z
 function LoginPageContent() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { data: session, status } = useSession();
 
   const [mode, setMode] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -101,8 +102,28 @@ function LoginPageContent() {
   });
   const newPasswordValue = watchReset("newPassword");
 
+  useEffect(() => {
+    if (status !== "loading" && session && status === "authenticated") {
+      const user = session.user;
+      const targetUrl = user.role === "admin" ? "/admin" : `/user/${user.id}/dashboard`;
+      router.push(targetUrl);
+    }
+  }, [session, status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
 const onLogin = async (data) => {
     try {
+      if (session) {
+        await signOut({ redirect: false });
+      }
+      
       const userData = await login(data).unwrap();
       dispatch(
         setCredentials({ user: userData.user, backendToken: userData.backendToken })
